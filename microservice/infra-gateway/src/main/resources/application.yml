@@ -1,0 +1,24 @@
+server:
+  port: 9487
+  
+spring:
+  application:
+    name: infra-gateway
+  cloud:
+    # enabled for prod
+    kubernetes:
+      discovery:
+        enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+#  instance:
+#    prefer-ip-address: true
+
