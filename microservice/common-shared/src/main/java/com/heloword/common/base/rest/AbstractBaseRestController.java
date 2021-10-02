@@ -6,11 +6,7 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import com.heloword.common.base.service.IBaseService;
 
@@ -21,7 +17,9 @@ import com.heloword.common.base.service.IBaseService;
  * @param <T> the generic type
  * @param <ID> the generic type
  */
-public abstract class BaseRestController<T, ID>{
+@RestController
+@RequestMapping("/api")
+public abstract class AbstractBaseRestController<T, ID>{
 
 	/**
 	 * Gets the service.

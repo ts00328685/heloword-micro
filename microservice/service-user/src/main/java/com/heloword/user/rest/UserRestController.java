@@ -5,13 +5,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.heloword.common.base.rest.BaseRestController;
+import com.heloword.common.base.rest.AbstractBaseRestController;
 import com.heloword.common.base.service.IBaseService;
 import com.heloword.common.entity.UserEntity;
 
 @RestController
 @RequestMapping("/")
-public class UserRestController extends BaseRestController<UserEntity, String> {
+public class UserRestController extends AbstractBaseRestController<UserEntity, String> {
 	
 	@GetMapping("/get-user")
 	public ResponseEntity<?> getUser() {
