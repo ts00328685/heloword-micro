@@ -2,7 +2,7 @@ spring:
   application:
     name: service-word
   profiles:
-    active: prod
+    active: dev
 
 server:
   servlet:
