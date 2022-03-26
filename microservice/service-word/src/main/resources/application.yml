@@ -10,7 +10,7 @@ server:
 
 ---
 server:
-  port: 20002
+  port: 80
 
 eureka:
   client:
