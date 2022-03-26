@@ -1,41 +1,41 @@
 package com.heloword.common.base.service;
 
-
 import java.util.List;
-
+import java.util.Optional;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Sort;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.heloword.common.base.dto.BaseSearchBean;
-
 
 public interface IBaseService<T, ID> {
 
-	public T save(T obj) throws Exception;
-	
-	public List<T> saveAll(List<T> objs) throws Exception;
+  T save(T obj);
 
-	public T findById(ID id) throws Exception;
+  List<T> saveAll(List<T> objs);
 
-	public List<T> findByIds(List<ID> ids) throws Exception;
-	
-	public List<T> findAll() throws Exception;
+  Optional<T> findById(ID id);
 
-	public List<T> findAll(Sort sort) throws Exception;
+  List<T> findByIds(List<ID> ids);
 
-	public List<T> findAll(BaseSearchBean searchBean) throws Exception;
+  List<T> findAll();
 
-	public List<T> findAll(Specification<T> specification) throws Exception;
+  List<T> findAll(Sort sort);
 
-	public Page<T> search(BaseSearchBean searchBean) throws Exception;
+  List<T> findAll(Example<T> example);
 
-	public void delete(T obj) throws Exception;
+  List<T> findAll(Specification<T> specification);
 
-	public void deleteById(ID id) throws Exception;
-	
-	public void deleteAll(List<T> objs) throws Exception;
-	
-	public void flush() throws Exception;
+  Page<T> findAllPaged(Pageable pageable);
+
+  void delete(T obj);
+
+  void deleteById(ID id);
+
+  void deleteAll(List<T> objs);
+
+  void flush();
 
 }
