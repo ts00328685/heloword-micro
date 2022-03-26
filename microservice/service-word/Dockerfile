@@ -7,4 +7,4 @@ ENV HELO_DB_URL=$HELO_DB_URL
 ENV HELO_DB_PASSWORD=$HELO_DB_PASSWORD
 ENV HELO_DB_USERNAME=$HELO_DB_USERNAME
 COPY ${JAR_FILE} app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java","-jar","/app.jar", "-Dserver.port=80"]

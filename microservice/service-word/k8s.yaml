@@ -57,5 +57,5 @@ spec:
             name: ${APP_NAME}
             port:
               number: 80
-        path: /micro/v${MAJOR_VERSION}(/|$)(.*)
+        path: /${APP_NAME}/v${MAJOR_VERSION}(/|$)(.*)
         pathType: Prefix
