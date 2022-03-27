@@ -2,16 +2,10 @@ package com.heloword.user;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import com.heloword.common.base.app.AbstractBaseApplication;
 
-@SpringBootApplication(exclude = {
-    DataSourceAutoConfiguration.class, 
-    DataSourceTransactionManagerAutoConfiguration.class, 
-    HibernateJpaAutoConfiguration.class
-})
-public class UserApplication {
+@SpringBootApplication()
+public class UserApplication extends AbstractBaseApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(UserApplication.class, args);
