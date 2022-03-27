@@ -10,28 +10,28 @@ import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseRestController;
 import com.heloword.common.base.service.IBaseService;
-import com.heloword.common.entity.SentenceGermanEntity;
-import com.heloword.word.service.SentenceGermanService;
+import com.heloword.common.entity.WordGermanEntity;
+import com.heloword.word.service.WordGermanService;
 
 @RestController()
-@RequestMapping("/sentence-german")
-public class SentenceGermanRestController extends AbstractBaseRestController<SentenceGermanEntity, Long> {
+@RequestMapping("/word-german")
+public class WordGermanRestController extends AbstractBaseRestController<WordGermanEntity, Long> {
 
 	@Autowired
-	private SentenceGermanService sentenceGermanService;
+	private WordGermanService wordGermanService;
 
 	@Override
-	public IBaseService<SentenceGermanEntity, Long> getService() {
-		return sentenceGermanService;
+	public IBaseService<WordGermanEntity, Long> getService() {
+		return wordGermanService;
 	}
 
 	@GetMapping("/example/{word}")
 	public HeloResponse<?> findAllByExample(@PathVariable String word) {
-		SentenceGermanEntity condition = SentenceGermanEntity.builder().sentence(word).translateEn(word).build();
+		WordGermanEntity condition = WordGermanEntity.builder().word(word).translateEn(word).translateCh(word).build();
 		ExampleMatcher matcher = ExampleMatcher.matchingAny()
-						.withMatcher("sentence", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
-						.withMatcher("translateEn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains());
+				.withMatcher("word", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
+				.withMatcher("translateCn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
+				.withMatcher("translateEn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains());
 		return success(getService().findAll(Example.of(condition, matcher)));
 	}
-	
 }

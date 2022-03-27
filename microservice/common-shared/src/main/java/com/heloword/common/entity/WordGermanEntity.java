@@ -1,26 +1,20 @@
 package com.heloword.common.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import com.heloword.common.base.entity.BaseWordEntity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.Generated;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@SuperBuilder
 @Data
 @Entity
+@SequenceGenerator(initialValue = 1, name = "id_generator", sequenceName = "word_german_seq")
 @Table(name = "WORD_GERMAN")
-public class WordGermanEntity extends BaseEntity {
-
-  @Generated
-  private Long id;
-  private String word;
-  private String phonetics;
-  private String level;
+public class WordGermanEntity extends BaseWordEntity {
 
 }

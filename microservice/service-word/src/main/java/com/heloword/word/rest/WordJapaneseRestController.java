@@ -10,28 +10,29 @@ import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseRestController;
 import com.heloword.common.base.service.IBaseService;
-import com.heloword.common.entity.SentenceGermanEntity;
-import com.heloword.word.service.SentenceGermanService;
+import com.heloword.common.entity.WordGermanEntity;
+import com.heloword.common.entity.WordJapaneseEntity;
+import com.heloword.word.service.WordJapaneseService;
 
 @RestController()
-@RequestMapping("/sentence-german")
-public class SentenceGermanRestController extends AbstractBaseRestController<SentenceGermanEntity, Long> {
+@RequestMapping("/word-japanese")
+public class WordJapaneseRestController extends AbstractBaseRestController<WordJapaneseEntity, Long> {
 
 	@Autowired
-	private SentenceGermanService sentenceGermanService;
+	private WordJapaneseService wordJapaneseService;
 
 	@Override
-	public IBaseService<SentenceGermanEntity, Long> getService() {
-		return sentenceGermanService;
+	public IBaseService<WordJapaneseEntity, Long> getService() {
+		return wordJapaneseService;
 	}
 
 	@GetMapping("/example/{word}")
 	public HeloResponse<?> findAllByExample(@PathVariable String word) {
-		SentenceGermanEntity condition = SentenceGermanEntity.builder().sentence(word).translateEn(word).build();
+		WordJapaneseEntity condition = WordJapaneseEntity.builder().word(word).translateEn(word).translateCh(word).build();
 		ExampleMatcher matcher = ExampleMatcher.matchingAny()
-						.withMatcher("sentence", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
-						.withMatcher("translateEn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains());
+				.withMatcher("word", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
+				.withMatcher("translateCn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
+				.withMatcher("translateEn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains());
 		return success(getService().findAll(Example.of(condition, matcher)));
 	}
-	
 }

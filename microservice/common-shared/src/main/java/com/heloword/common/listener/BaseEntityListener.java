@@ -4,13 +4,14 @@ import java.time.Instant;
 import java.util.Date;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
-import com.heloword.common.entity.BaseEntity;
+import com.heloword.common.base.entity.BaseEntity;
 
 public class BaseEntityListener {
 
   @PrePersist
   void onPrePersist(BaseEntity baseEntity) {
     baseEntity.setCreateDate(Date.from(Instant.now()));
+    baseEntity.setStatus(1);
     baseEntity.setVersion(0);
   }
 

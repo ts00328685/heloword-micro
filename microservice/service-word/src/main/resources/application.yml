@@ -25,7 +25,7 @@ spring:
     show-sql: true
     hibernate:
       dialect: org.hibernate.dialect.MySQL55Dialect
-      ddl-auto: none
+      ddl-auto: update
 
 logging:
   level:

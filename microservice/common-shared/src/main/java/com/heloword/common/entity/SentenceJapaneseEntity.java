@@ -9,13 +9,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "SENTENCE_GERMAN")
-@SequenceGenerator(initialValue = 1, name = "id_generator", sequenceName = "sentence_german_seq")
 @SuperBuilder
-public class SentenceGermanEntity extends BaseSentenceEntity {
+@SequenceGenerator(initialValue = 1, name = "id_generator", sequenceName = "sentence_japanese_seq")
+@Table(name = "SENTENCE_JAPANESE")
+public class SentenceJapaneseEntity extends BaseSentenceEntity {
 
 }

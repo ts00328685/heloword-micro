@@ -10,28 +10,28 @@ import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseRestController;
 import com.heloword.common.base.service.IBaseService;
-import com.heloword.common.entity.SentenceGermanEntity;
-import com.heloword.word.service.SentenceGermanService;
+import com.heloword.common.entity.SentenceEnglishEntity;
+import com.heloword.common.entity.SentenceJapaneseEntity;
+import com.heloword.word.service.SentenceJapaneseService;
 
 @RestController()
-@RequestMapping("/sentence-german")
-public class SentenceGermanRestController extends AbstractBaseRestController<SentenceGermanEntity, Long> {
+@RequestMapping("/sentence-japanese")
+public class SentenceJapaneseRestController extends AbstractBaseRestController<SentenceJapaneseEntity, Long> {
 
 	@Autowired
-	private SentenceGermanService sentenceGermanService;
+	private SentenceJapaneseService sentenceJapaneseService;
 
 	@Override
-	public IBaseService<SentenceGermanEntity, Long> getService() {
-		return sentenceGermanService;
+	public IBaseService<SentenceJapaneseEntity, Long> getService() {
+		return sentenceJapaneseService;
 	}
 
 	@GetMapping("/example/{word}")
 	public HeloResponse<?> findAllByExample(@PathVariable String word) {
-		SentenceGermanEntity condition = SentenceGermanEntity.builder().sentence(word).translateEn(word).build();
+		SentenceJapaneseEntity condition = SentenceJapaneseEntity.builder().sentence(word).translateEn(word).build();
 		ExampleMatcher matcher = ExampleMatcher.matchingAny()
-						.withMatcher("sentence", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
-						.withMatcher("translateEn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains());
+				.withMatcher("sentence", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains())
+				.withMatcher("translateEn", ExampleMatcher.GenericPropertyMatchers.ignoreCase().contains());
 		return success(getService().findAll(Example.of(condition, matcher)));
 	}
-	
 }
