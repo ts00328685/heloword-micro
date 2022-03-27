@@ -20,6 +20,8 @@ spec:
         name: ${APP_NAME}
         resources: {}
         env:
+          - name: TZ
+            value: Asia/Taipei
           - name: HELO_DB_USERNAME
             valueFrom:
               configMapKeyRef:
