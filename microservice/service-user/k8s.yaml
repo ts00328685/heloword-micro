@@ -24,23 +24,19 @@ spec:
             value: Asia/Taipei
           - name: HELO_DB_USERNAME
             valueFrom:
-              configMapKeyRef:
-                name: heloword-config
+              secretKeyRef:
+                name: heloword-secret
                 key: HELO_DB_USERNAME
           - name: HELO_DB_PASSWORD
             valueFrom:
-              configMapKeyRef:
-                name: heloword-config
+              secretKeyRef:
+                name: heloword-secret
                 key: HELO_DB_PASSWORD
           - name: HELO_DB_URL
             valueFrom:
-              configMapKeyRef:
-                name: heloword-config
+              secretKeyRef:
+                name: heloword-secret
                 key: HELO_DB_URL
-      volumes:
-        - name: heloword-config
-          configMap:
-            name: heloword-config
 ---
 apiVersion: v1
 kind: Service
@@ -52,12 +48,12 @@ spec:
   ports:
   - port: 80
     protocol: TCP
-    targetPort: 80
+    targetPort: 8001
   selector:
     app: ${APP_NAME}
 status:
   loadBalancer: {}
---- 
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

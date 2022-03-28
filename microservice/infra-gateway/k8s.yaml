@@ -16,12 +16,12 @@ spec:
         app: ${APP_NAME}
     spec:
       containers:
-      - image: ts00328685/heloword-${APP_NAME}:${MAJOR_VERSION}.${MINOR_VERSION}
-        name: ${APP_NAME}
-        resources: {}
-        env:
-          - name: TZ
-            value: Asia/Taipei
+        - image: ts00328685/heloword-${APP_NAME}:${MAJOR_VERSION}.${MINOR_VERSION}
+          name: ${APP_NAME}
+          resources: {}
+          env:
+            - name: TZ
+              value: Asia/Taipei
 ---
 apiVersion: v1
 kind: Service
@@ -31,9 +31,9 @@ metadata:
   name: ${APP_NAME}
 spec:
   ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 8761
+    - port: 80
+      protocol: TCP
+      targetPort: 9487
   selector:
     app: ${APP_NAME}
 status:

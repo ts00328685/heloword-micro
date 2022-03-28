@@ -9,11 +9,14 @@ server:
     context-path: /api
 ---
 server:
-  port: 80
+  port: 8002
 
 eureka:
   client:
-    enabled: false
+    serviceUrl:
+      defaultZone: http://micro-infra-discovery.default.svc.cluster.local
+#      defaultZone: http://localhost:8761/eureka/
+    enabled: true
 
 spring:
   profiles: dev
