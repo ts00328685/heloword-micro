@@ -14,7 +14,7 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://micro-infra-discovery.default.svc.cluster.local
+      defaultZone: http://micro-infra-discovery.default.svc.cluster.local/eureka
     #      defaultZone: http://localhost:8761/eureka/
     enabled: true
 
@@ -36,7 +36,7 @@ logging:
 
 ---
 server:
-  port: 80
+  port: 8001
 
 spring:
   profiles: prod
