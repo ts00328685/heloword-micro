@@ -31,7 +31,7 @@ metadata:
   name: ${APP_NAME}
 spec:
   ports:
-    - port: 80
+    - port: 9487
       protocol: TCP
       targetPort: 9487
   selector:
@@ -55,6 +55,6 @@ spec:
               service:
                 name: ${APP_NAME}
                 port:
-                  number: 80
+                  number: 9487
             path: /${APP_NAME}/v${MAJOR_VERSION}(/|$)(.*)
             pathType: Prefix
