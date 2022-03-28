@@ -18,7 +18,7 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://micro-infra-discovery.default.svc.cluster.local/eureka/
+      defaultZone: http://micro-infra-discovery.default.svc.cluster.local:8761/eureka/
     #      defaultZone: http://localhost:8761/eureka/
 #  instance:
 #    prefer-ip-address: true
