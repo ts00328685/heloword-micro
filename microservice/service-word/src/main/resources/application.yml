@@ -3,10 +3,13 @@ spring:
     name: service-word
   profiles:
     active: dev
-
 server:
   servlet:
     context-path: /api
+    
+eureka:
+  instance:
+    prefer-ip-address: true
 ---
 server:
   port: 8002
