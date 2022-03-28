@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ${APP_NAME}
+  name: ${APP_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${APP_NAME}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}
+    spec:
+      containers:
+      - image: ts00328685/heloword-${APP_NAME}:${MAJOR_VERSION}.${MINOR_VERSION}
+        name: ${APP_NAME}
+        resources: {}
+        env:
+          - name: TZ
+            value: Asia/Taipei
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ${APP_NAME}
+  name: ${APP_NAME}
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: ${APP_NAME}
+status:
+  loadBalancer: {}
