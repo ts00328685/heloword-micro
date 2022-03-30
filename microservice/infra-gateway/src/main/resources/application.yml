@@ -23,3 +23,8 @@ eureka:
 #  instance:
 #    prefer-ip-address: true
 
+logging:
+  level:
+    com.heloword.gateway.*: debug
+    org.springframework: debug
+

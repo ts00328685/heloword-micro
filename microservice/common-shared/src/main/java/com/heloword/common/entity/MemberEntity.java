@@ -9,6 +9,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import org.springframework.data.redis.core.RedisHash;
 import com.heloword.common.base.entity.BaseEntity;
 
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+@RedisHash("MEMBER")
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
@@ -35,7 +37,7 @@ public class MemberEntity extends BaseEntity {
   @Column(unique = true)
   private String facebookToken;
 
-  @ManyToMany(fetch = FetchType.LAZY)
+  @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(name = "MEMBER_ROLE",
       joinColumns = {@JoinColumn(name = "MEMBER_ID")},
       inverseJoinColumns = {@JoinColumn(name = "ROLE_ID")})

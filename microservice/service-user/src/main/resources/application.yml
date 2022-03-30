@@ -36,6 +36,7 @@ spring:
 
 logging:
   level:
+    com.heloword.*: debug
     org.springframework: debug
 
 ---

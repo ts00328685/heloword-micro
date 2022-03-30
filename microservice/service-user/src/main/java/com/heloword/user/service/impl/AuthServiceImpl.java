@@ -40,21 +40,22 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void createUserSession(GoogleIdToken.Payload idToken) {
+  public Optional<MemberEntity> findOrRegisterUser(GoogleIdToken.Payload idToken) {
     Optional<MemberEntity> member = memberRepository.findByEmail(idToken.getEmail());
     if (member.isPresent()) {
       MemberEntity memberEntity = member.get();
       memberEntity.setGoogleToken(idToken.getExpirationTimeSeconds().toString());
+      return member;
     } else {
       // create new member
       MemberEntity newMember = MemberEntity.builder()
           .email(idToken.getEmail())
-          .username(idToken.getUserId())
+          .username(idToken.getEmail())
           .googleToken(idToken.getExpirationTimeSeconds().toString())
           .status(1)
           .roles(new HashSet(Arrays.asList(roleRepository.findById(1L).get())))
           .build();
-      memberRepository.save(newMember);
+      return Optional.of(memberRepository.save(newMember));
     }
 
   }

@@ -26,9 +26,9 @@ public class LogAspect {
 
   @Before("pointcut()")
   public void before(JoinPoint joinPoint) {
-    log.info("=====calling rest method=====");
-    log.info(getMethodName(joinPoint));
-    log.info("args: " + Arrays.toString(joinPoint.getArgs()));
+    log.debug("=====calling rest method=====");
+    log.debug(getMethodName(joinPoint));
+    log.debug("args: " + Arrays.toString(joinPoint.getArgs()));
   }
 
   @Around("pointcut()")
@@ -37,14 +37,14 @@ public class LogAspect {
     try {
       return joinPoint.proceed();
     } finally {
-      log.info("=====time elapsed: " + (System.currentTimeMillis() - startMillis) / 1000D + "s=====");
+      log.debug("=====time elapsed: " + (System.currentTimeMillis() - startMillis) / 1000D + "s=====");
     }
   }
 
 
   @After("pointcut()")
   public void after(JoinPoint joinPoint) {
-    log.info("=====calling rest method ends=====");
+    log.debug("=====calling rest method ends=====");
   }
 
   private static String getMethodName(JoinPoint joinPoint) {
