@@ -11,3 +11,6 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+logging:
+  level:
+    root: trace
