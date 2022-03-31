@@ -1,66 +1,7 @@
 spring:
   application:
     name: service-user
-  profiles:
-    active: dev
-
 server:
   servlet:
     context-path: /api
-
-eureka:
-  instance:
-    prefer-ip-address: true
----
-server:
   port: 8001
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://micro-infra-discovery.default.svc.cluster.local:8761/eureka
-    #      defaultZone: http://localhost:8761/eureka/
-    enabled: true
-
-spring:
-  profiles: dev
-  datasource:
-    url: ${HELO_DB_URL}
-    username: ${HELO_DB_USERNAME}
-    password: ${HELO_DB_PASSWORD}
-  jpa:
-    show-sql: true
-    hibernate:
-      dialect: org.hibernate.dialect.MySQL55Dialect
-      ddl-auto: update
-
-logging:
-  level:
-    com.heloword.*: debug
-    org.springframework: debug
-
----
-server:
-  port: 8001
-
-spring:
-  profiles: prod
-
-  cloud:
-    service-registry:
-      auto-registration:
-        enabled: true
-
-  datasource:
-    url: ${HELO_DB_URL}
-    username: ${HELO_DB_USERNAME}
-    password: ${HELO_DB_PASSWORD}
-  jpa:
-    show-sql: false
-    hibernate:
-      dialect: org.hibernate.dialect.MySQL55Dialect
-      ddl-auto: none
-logging:
-  level:
-    org.springframework: error
-

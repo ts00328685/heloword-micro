@@ -37,6 +37,21 @@ spec:
               secretKeyRef:
                 name: heloword-secret
                 key: HELO_DB_URL
+          - name: HELO_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: HELO_REDIS_URL
+          - name: HELO_REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: HELO_REDIS_PASSWORD
+          - name: HELO_REDIS_PORT
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: HELO_REDIS_PORT
 ---
 apiVersion: v1
 kind: Service

@@ -1,0 +1,32 @@
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://micro-infra-discovery.default.svc.cluster.local:8761/eureka
+    enabled: true
+
+logging:
+  level:
+    com.heloword.*: error
+    org.springframework: error
+
+spring:
+
+  datasource:
+    url: ${HELO_DB_URL}
+    username: ${HELO_DB_USERNAME}
+    password: ${HELO_DB_PASSWORD}
+
+  redis:
+    host: ${HELO_REDIS_URL}
+    password: ${HELO_REDIS_PASSWORD}
+    port: ${HELO_REDIS_PORT}
+
+  jpa:
+    show-sql: false
+    hibernate:
+      dialect: org.hibernate.dialect.MySQL55Dialect
+      ddl-auto: none
+
+

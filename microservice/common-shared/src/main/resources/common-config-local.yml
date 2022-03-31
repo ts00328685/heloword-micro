@@ -1,0 +1,41 @@
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: true
+
+logging:
+  level:
+    com.heloword.*: debug
+    org.springframework: debug
+
+management:
+  endpoint:
+    gateway:
+      enabled: true # default value
+  endpoints:
+    web:
+      exposure:
+        include: gateway
+
+spring:
+
+  datasource:
+    url: ${HELO_DB_URL}
+    username: ${HELO_DB_USERNAME}
+    password: ${HELO_DB_PASSWORD}
+
+  redis:
+    host: ${HELO_REDIS_URL}
+    password: ${HELO_REDIS_PASSWORD}
+    port: ${HELO_REDIS_PORT}
+
+  jpa:
+    show-sql: true
+    hibernate:
+      dialect: org.hibernate.dialect.MySQL55Dialect
+      ddl-auto: update
+
+
