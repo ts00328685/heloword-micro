@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.entity.MemberEntity;
 
-@FeignClient("SERVICE-USER")
+@FeignClient(name = "SERVICE-USER", url = "${feign.service-user.url}")
 public interface ServiceUserClient {
 
   @GetMapping("/api/user/{id}")

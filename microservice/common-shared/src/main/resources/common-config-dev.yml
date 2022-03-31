@@ -5,6 +5,9 @@ eureka:
     serviceUrl:
       defaultZone: http://micro-infra-discovery.default.svc.cluster.local:8761/eureka
     enabled: true
+feign:
+  service-user:
+    url: http://micro-service-user.default.svc.cluster.local:8001
 
 spring:
 
