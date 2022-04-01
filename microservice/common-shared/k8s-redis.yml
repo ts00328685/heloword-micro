@@ -33,6 +33,11 @@ spec:
           env:
             - name: TZ
               value: Asia/Taipei
+            - name: HELO_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: heloword-secret
+                  key: HELO_REDIS_PASSWORD
           volumeMounts:
           - mountPath: /redis-master-data
             name: data
