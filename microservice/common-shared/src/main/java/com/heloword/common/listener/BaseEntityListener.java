@@ -18,6 +18,8 @@ public class BaseEntityListener {
   @PreUpdate
   void onPreUpdate(BaseEntity baseEntity) {
     baseEntity.setUpdateDate(Date.from(Instant.now()));
-    baseEntity.setVersion(baseEntity.getVersion() + 1);
+    if (baseEntity.getVersion() != null) {
+      baseEntity.setVersion(baseEntity.getVersion() + 1);
+    }
   }
 }
