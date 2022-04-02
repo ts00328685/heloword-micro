@@ -21,6 +21,7 @@
 
 	<modules>
 		<module>common-shared</module>
+		<module>service-auth</module>
 		<module>service-user</module>
 		<module>service-word</module>
 		<module>infra-gateway</module>
