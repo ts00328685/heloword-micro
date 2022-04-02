@@ -9,6 +9,11 @@ feign:
   service-user:
     url: http://micro-service-user.default.svc.cluster.local:8001
 
+cipher:
+  aes:
+    key: ${AES_KEY}
+    iv: ${AES_IV}
+
 spring:
 
   datasource:

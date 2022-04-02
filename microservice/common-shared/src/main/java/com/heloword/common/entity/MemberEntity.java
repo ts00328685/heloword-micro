@@ -10,6 +10,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import org.springframework.data.redis.core.RedisHash;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.heloword.common.base.entity.BaseEntity;
 
 import lombok.AllArgsConstructor;
@@ -29,12 +30,19 @@ public class MemberEntity extends BaseEntity {
 
   @Column(unique = true)
   private String username;
+  private String fullname;
+  private String nickname;
+  @Column(length = 2048)
+  private String picture;
+  private String locale;
   private String password;
   @Column(unique = true)
   private String email;
-  @Column(unique = true)
+  @JsonIgnore
+  @Column(length = 4096)
   private String googleToken;
-  @Column(unique = true)
+  @JsonIgnore
+  @Column(length = 4096)
   private String facebookToken;
 
   @ManyToMany(fetch = FetchType.EAGER)

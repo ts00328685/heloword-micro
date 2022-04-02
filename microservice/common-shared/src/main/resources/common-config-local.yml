@@ -6,10 +6,10 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
     enabled: true
 
-logging:
-  level:
-    com.heloword.*: debug
-    org.springframework: debug
+cipher:
+  aes:
+    key: ${AES_KEY}
+    iv: ${AES_IV}
 
 management:
   endpoint:

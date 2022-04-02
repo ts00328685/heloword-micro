@@ -1,21 +1,25 @@
 package com.heloword.common.feignclient;
 
-import java.util.Map;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.entity.MemberEntity;
+import com.heloword.common.entity.RoleEntity;
 
-@FeignClient(name = "SERVICE-USER", url = "${feign.service-user.url}")
+@FeignClient(name = "SERVICE-USER", url = "${feign.service-user.url:}")
 public interface ServiceUserClient {
 
   @GetMapping("/api/user/{id}")
-  HeloResponse<?> getMemberById(@PathVariable Long id);
+  HeloResponse<MemberEntity> getMemberById(@PathVariable Long id);
 
-  @PostMapping("/api/auth/verify-google-id")
-  HeloResponse<MemberEntity> verifyGoogleId(@RequestBody Map<String, ?> request);
+  @GetMapping("/api/user/email/{email}")
+  HeloResponse<MemberEntity> getMemberByEmail(@PathVariable String email);
 
+  @GetMapping("/api/role/{id}")
+  HeloResponse<RoleEntity> getRoleById(@PathVariable Long id);
+
+  @PostMapping("/api/user")
+  HeloResponse<MemberEntity> createOrUpdatMember(MemberEntity member);
 }

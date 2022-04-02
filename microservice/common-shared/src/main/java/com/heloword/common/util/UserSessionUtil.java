@@ -11,19 +11,26 @@ import com.heloword.common.entity.MemberEntity;
 @Component
 public class UserSessionUtil {
 
+  public static final int SESSION_EXPIRE_DAYS = 5;
+
   @Autowired
   RedisTemplate<String, String> redisTemplate;
 
   @Autowired
   Gson gson;
 
-  public void saveUserToSession(MemberEntity memberEntity) {
+  public void saveUserToSessionByEmail(MemberEntity memberEntity) {
     redisTemplate.opsForValue().set(memberEntity.getEmail(), gson.toJson(memberEntity));
-    redisTemplate.expire(memberEntity.getEmail(), 20, TimeUnit.SECONDS);
+    redisTemplate.expire(memberEntity.getEmail(), SESSION_EXPIRE_DAYS, TimeUnit.DAYS);
   }
 
-  public Optional<MemberEntity> getUserFromSession(String email) {
-    return Optional.ofNullable(redisTemplate.opsForValue().get(email))
+  public void saveUserToSessionByKey(String key, MemberEntity memberEntity) {
+    redisTemplate.opsForValue().set(key, gson.toJson(memberEntity));
+    redisTemplate.expire(key, SESSION_EXPIRE_DAYS, TimeUnit.DAYS);
+  }
+
+  public Optional<MemberEntity> getUserFromSession(String key) {
+    return Optional.ofNullable(redisTemplate.opsForValue().get(key))
                    .map(userString -> gson.fromJson(userString, MemberEntity.class));
   }
 }

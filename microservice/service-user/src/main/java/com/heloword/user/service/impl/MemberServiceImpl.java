@@ -1,5 +1,6 @@
 package com.heloword.user.service.impl;
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.heloword.common.base.repo.IBaseRepo;
@@ -17,5 +18,9 @@ public class MemberServiceImpl extends AbstractBaseServiceImpl<MemberEntity, Lon
   @Override
   protected IBaseRepo getRepo() {
     return memberRepository;
+  }
+
+  public MemberEntity findByEmail(String email) {
+    return memberRepository.findByEmail(email);
   }
 }

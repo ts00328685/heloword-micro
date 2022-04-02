@@ -1,5 +1,10 @@
 package com.heloword.common.base.dto;
 
+import java.time.Instant;
+import java.util.Date;
+import org.springframework.format.annotation.DateTimeFormat;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.heloword.common.type.ResponseCode;
 
 import lombok.AllArgsConstructor;
@@ -11,9 +16,18 @@ import lombok.NoArgsConstructor;
 @Data
 public class HeloResponse<T> {
 
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", timezone = "Asia/Taipei")
+  private Date timestamp;
   private String code;
   private String message;
   private T data;
+
+  private HeloResponse(String code, String message, T data){
+    this.timestamp = Date.from(Instant.now());
+    this.code = code;
+    this.message = message;
+    this.data = data;
+  }
 
   public static <T> HeloResponse<T> successWithoutData() {
     return new HeloResponse<T>(ResponseCode.SUCCESS.getCode(), null, null);
