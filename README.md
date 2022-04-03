@@ -1,2 +1,2 @@
 # heloword-micro
-heloword micro service
+heloword micro services that run on kubernetes
