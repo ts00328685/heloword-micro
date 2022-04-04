@@ -11,6 +11,12 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+cipher:
+  aes:
+    key: ${AES_KEY}
+    iv: ${AES_IV}
+
 logging:
   level:
+    com.springframework.*: debug
     com.heloword.*: debug

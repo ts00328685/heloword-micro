@@ -5,3 +5,8 @@ server:
   servlet:
     context-path: /api
   port: 8001
+
+logging:
+  level:
+    org.springframework.*: debug
+    com.heloword.*: debug

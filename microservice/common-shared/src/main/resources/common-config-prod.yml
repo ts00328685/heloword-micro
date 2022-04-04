@@ -13,6 +13,10 @@ cipher:
 
 spring:
 
+  security:
+    filter:
+      order: 10
+
   datasource:
     url: ${HELO_DB_URL}
     username: ${HELO_DB_USERNAME}

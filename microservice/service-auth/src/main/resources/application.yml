@@ -9,4 +9,5 @@ server:
 
 logging:
   level:
+    org.springframework.*: debug
     com.heloword.*: debug

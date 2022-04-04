@@ -1,7 +1,12 @@
 spring:
   application:
     name: service-word
+
 server:
   servlet:
     context-path: /api
   port: 8002
+
+logging:
+  level:
+    org.springframework: debug

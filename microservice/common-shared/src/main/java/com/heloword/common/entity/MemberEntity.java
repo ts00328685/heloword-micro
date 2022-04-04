@@ -38,11 +38,9 @@ public class MemberEntity extends BaseEntity {
   private String password;
   @Column(unique = true)
   private String email;
-  @JsonIgnore
-  @Column(length = 4096)
+  @Column(length = 1024)
   private String googleToken;
-  @JsonIgnore
-  @Column(length = 4096)
+  @Column(length = 1024)
   private String facebookToken;
 
   @ManyToMany(fetch = FetchType.EAGER)

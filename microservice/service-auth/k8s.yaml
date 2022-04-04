@@ -52,6 +52,22 @@ spec:
               secretKeyRef:
                 name: heloword-secret
                 key: HELO_REDIS_PORT
+          - name: AES_KEY
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: AES_KEY
+          - name: AES_IV
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: AES_IV
+          - name: FEIGN_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: FEIGN_API_KEY
+          
 ---
 apiVersion: v1
 kind: Service

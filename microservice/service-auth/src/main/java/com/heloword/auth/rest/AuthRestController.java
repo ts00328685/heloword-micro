@@ -1,7 +1,5 @@
 package com.heloword.auth.rest;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,14 +29,8 @@ public class AuthRestController {
   UserSessionUtil userSessionUtil;
 
   @PostMapping("/verify-google-id")
-  public HeloResponse<MemberEntity> verifyGoogleId(@RequestBody Map<String, ?> request) throws GeneralSecurityException, IOException {
+  public HeloResponse<MemberEntity> verifyGoogleId(@RequestBody Map<String, ?> request) {
     String idToken = request.get("idToken").toString();
-
-    Optional<MemberEntity> userFromSession = userSessionUtil.getUserFromSession(idToken);
-    if (userFromSession.isPresent()) {
-      log.debug("User still in session, requiring no google id verification");
-      return HeloResponse.successWithData(userFromSession.get());
-    }
 
     Optional<GoogleIdToken.Payload> payload = authService.verifyGoogleIdToken(idToken);
     if (payload.isPresent()) {

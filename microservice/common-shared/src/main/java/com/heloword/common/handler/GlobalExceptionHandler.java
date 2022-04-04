@@ -1,6 +1,7 @@
 package com.heloword.common.handler;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,6 +23,11 @@ public class GlobalExceptionHandler {
     if (ex instanceof HeloServiceException) {
       log.error("handling global service error", ex);
       return HeloResponse.fail(((HeloServiceException) ex).getResponseCode());
+    }
+
+    if (ex instanceof com.netflix.client.ClientException) {
+      log.error("handling global service 503 error", ex);
+      return HeloResponse.fail(ResponseCode.SERVICE_UNAVAILABLE);
     }
 
     log.error("handling uncaught global error", ex);

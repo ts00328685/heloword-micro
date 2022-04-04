@@ -6,6 +6,7 @@ eureka:
       defaultZone: http://micro-infra-discovery.default.svc.cluster.local:8761/eureka
     enabled: true
 feign:
+  api-key: ${FEIGN_API_KEY}
   service-user:
     url: http://micro-service-user.default.svc.cluster.local:8001
 
@@ -15,6 +16,10 @@ cipher:
     iv: ${AES_IV}
 
 spring:
+
+  security:
+    filter:
+      order: 10
 
   datasource:
     url: ${HELO_DB_URL}
@@ -32,8 +37,4 @@ spring:
       dialect: org.hibernate.dialect.MySQL55Dialect
       ddl-auto: update
 
-logging:
-  level:
-    com.heloword.*: debug
-    org.springframework: debug
 

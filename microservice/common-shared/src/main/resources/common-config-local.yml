@@ -11,16 +11,14 @@ cipher:
     key: ${AES_KEY}
     iv: ${AES_IV}
 
-management:
-  endpoint:
-    gateway:
-      enabled: true # default value
-  endpoints:
-    web:
-      exposure:
-        include: gateway
+feign:
+  api-key: ${FEIGN_API_KEY}
 
 spring:
+
+  security:
+    filter:
+      order: 10
 
   datasource:
     url: ${HELO_DB_URL}

@@ -2,7 +2,6 @@ package com.heloword.gateway.filter;
 
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -11,12 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ServerWebExchange;
 import com.heloword.common.exception.HeloServiceException;
-import com.heloword.common.feignclient.ServiceUserClient;
 import com.heloword.common.type.ResponseCode;
 import com.heloword.common.util.EncodeUtil;
-import com.heloword.common.util.UserSessionUtil;
 import com.heloword.gateway.wrapper.CaptureRequest;
-import com.heloword.gateway.wrapper.CaptureResponse;
 import com.heloword.gateway.wrapper.ExchangeCaptureWrapper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,12 +28,6 @@ public class AuthFilter implements GlobalFilter {
   @Value("${cipher.aes.iv}")
   String AESIV;
 
-  @Autowired
-  ServiceUserClient serviceUserClient;
-
-  @Autowired
-  UserSessionUtil userSessionUtil;
-
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
@@ -45,12 +35,14 @@ public class AuthFilter implements GlobalFilter {
     List<String> cv = headers.getOrEmpty("cv");
 
     if (CollectionUtils.isEmpty(cv)) {
+      log.error("cv missing");
       throw HeloServiceException.of(ResponseCode.UNKNOWN_CLIENT);
     }
 
     String cvString = cv.get(0);
 
     if (StringUtils.isBlank(cvString)) {
+      log.error("cv format invalid");
       throw HeloServiceException.of(ResponseCode.INVALID_REQUEST);
     }
 

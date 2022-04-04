@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.entity.MemberEntity;
 import com.heloword.common.entity.RoleEntity;
+import com.heloword.common.filter.FeignClientInterceptor;
 
-@FeignClient(name = "SERVICE-USER", url = "${feign.service-user.url:}")
+@FeignClient(name = "SERVICE-USER", url = "${feign.service-user.url:}", configuration = FeignClientInterceptor.class)
 public interface ServiceUserClient {
 
   @GetMapping("/api/user/{id}")
