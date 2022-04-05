@@ -2,6 +2,7 @@ package com.heloword.common.util;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,9 @@ public class UserSessionUtil {
   }
 
   public Optional<MemberEntity> getUserFromSession(String key) {
+    if (StringUtils.isEmpty(key)) {
+      return Optional.empty();
+    }
     return Optional.ofNullable(redisTemplate.opsForValue().get(key))
                    .map(userString -> gson.fromJson(userString, MemberEntity.class));
   }

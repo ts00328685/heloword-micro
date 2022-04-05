@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.heloword.common.filter.JwtTokenFilter;
+import com.heloword.common.filter.ServiceAuthFilter;
 import com.heloword.common.handler.CustomAccessDeniedHandler;
 import com.heloword.common.type.MemberRole;
 
@@ -18,7 +18,7 @@ import com.heloword.common.type.MemberRole;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  JwtTokenFilter jwtTokenFilter;
+  ServiceAuthFilter jwtTokenFilter;
 
   @Autowired
   CustomAccessDeniedHandler customAccessDeniedHandler;

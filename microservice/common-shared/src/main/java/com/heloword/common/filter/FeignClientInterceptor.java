@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
+import com.heloword.common.type.AuthType;
+
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 
@@ -18,7 +20,7 @@ public class FeignClientInterceptor implements RequestInterceptor {
   @Override
   public void apply(RequestTemplate template) {
     template.headers(Map.of(
-        "X-FEIGN-API-KEY", List.of(feignApiKey),
+        AuthType.FEIGN_API_KEY.getKey(), List.of(feignApiKey),
         HttpHeaders.AUTHORIZATION, List.of("Bearer " + feignApiKey)
     ));
   }
