@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.RequestPath;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ServerWebExchange;
@@ -31,6 +32,13 @@ public class AuthFilter implements GlobalFilter {
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
+    ExchangeCaptureWrapper exchangeCaptureWrapper = new ExchangeCaptureWrapper(exchange);
+
+    String fullPath = exchange.getRequest().getPath().value();
+    if (StringUtils.startsWith(fullPath, "/api/auth/init")) {
+      return getVoidMono(chain, exchangeCaptureWrapper);
+    }
+
     HttpHeaders headers = exchange.getRequest().getHeaders();
     List<String> cv = headers.getOrEmpty("cv");
 
@@ -48,7 +56,10 @@ public class AuthFilter implements GlobalFilter {
 
     EncodeUtil.verifyCV(cvString, AESKey, AESIV);
 
-    ExchangeCaptureWrapper exchangeCaptureWrapper = new ExchangeCaptureWrapper(exchange);
+    return getVoidMono(chain, exchangeCaptureWrapper);
+  }
+
+  private Mono<Void> getVoidMono(GatewayFilterChain chain, ExchangeCaptureWrapper exchangeCaptureWrapper) {
     return chain.filter(exchangeCaptureWrapper).doOnSuccess(wrapper -> {
       CaptureRequest request = exchangeCaptureWrapper.getRequest();
       log.debug("<==== url {}", request.getURI());

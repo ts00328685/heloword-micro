@@ -4,10 +4,13 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,7 +41,35 @@ public class AuthRestController {
   UserSessionUtil userSessionUtil;
 
   @Autowired
-  private Environment environment;
+  Environment environment;
+
+  @Value("${cipher.aes.key}")
+  String aesKey;
+
+  @Value("${cipher.aes.iv}")
+  String aesIv;
+
+  @GetMapping("/init-cookie")
+  public HeloResponse<?> initCookie(HttpServletResponse response) {
+    Cookie cookie = new Cookie(AuthType.INIT_COOKIE_KEY.getKey(), AuthType.INIT_COOKIE_VALUE.getKey());
+    cookie.setHttpOnly(true);
+    cookie.setPath(COOKIE_PATH);
+    cookie.setSecure(!Util.isLocalEnv(environment));
+    response.addCookie(cookie);
+    return HeloResponse.successWithoutData();
+  }
+
+  @GetMapping("/init-cipher")
+  public HeloResponse<?> initAesKey(HttpServletRequest request) {
+    Optional.ofNullable(request.getCookies())
+        .map(Arrays::stream)
+        .map(cStream -> cStream.filter(c -> StringUtils.equals(AuthType.INIT_COOKIE_KEY.getKey(), c.getValue())))
+        .orElseThrow(() -> HeloServiceException.of(ResponseCode.EMPTY_INIT_COOKIE));
+    return HeloResponse.successWithData(Map.of(
+        "aesKey", aesKey,
+        "aesIv", aesIv
+    ));
+  }
 
   @PostMapping("/verify-google-id")
   public HeloResponse<MemberEntity> verifyGoogleId(@RequestBody Map<String, ?> request, HttpServletResponse response) {

@@ -56,7 +56,7 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
       HttpServletRequest request,
       HttpServletResponse response,
       FilterChain chain
-  ) throws ServletException, IOException {
+  ) {
 
     try {
       handleServiceAuthentication(request, response, chain);
@@ -74,7 +74,7 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
         .map(Cookie::getValue)
         .orElse(StringUtils.EMPTY);
 
-    if (Util.isLocalEnv(environment)) {
+    if (StringUtils.isEmpty(idToken) && Util.isLocalEnv(environment)) {
       idToken = StringUtils.split(request.getHeader(HttpHeaders.AUTHORIZATION), StringUtils.SPACE)[1];
     }
 
@@ -110,7 +110,6 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
     public static CustomUserDetails of(Optional<MemberEntity> memberEntity, Set<GrantedAuthority> additionalAuth) {
       CustomUserDetails userDetails = CustomUserDetails.of(memberEntity);
       additionalAuth.addAll(userDetails.getAuthorities());
-      userDetails.grantedAuthority = additionalAuth;
       userDetails.setGrantedAuthority(additionalAuth);
       return userDetails;
     }
