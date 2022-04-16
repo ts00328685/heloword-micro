@@ -1,7 +1,6 @@
 package com.heloword.common.filter;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -9,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -37,6 +35,7 @@ import com.heloword.common.util.Util;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import static com.heloword.common.util.Util.getIdTokenFromRequest;
 
 @Slf4j
 @Component
@@ -68,11 +67,7 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
 
   private void handleServiceAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
 
-    String idToken = Arrays.stream(Optional.ofNullable(request.getCookies()).orElse(new Cookie[]{}))
-        .filter(c -> StringUtils.equals(AuthType.GOOGLE_ID_TOKEN.getKey(), c.getName()))
-        .findAny()
-        .map(Cookie::getValue)
-        .orElse(StringUtils.EMPTY);
+    String idToken = getIdTokenFromRequest(request);
 
     if (StringUtils.isEmpty(idToken) && Util.isLocalEnv(environment)) {
       idToken = StringUtils.split(request.getHeader(HttpHeaders.AUTHORIZATION), StringUtils.SPACE)[1];

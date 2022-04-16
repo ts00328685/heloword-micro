@@ -26,6 +26,7 @@ import com.heloword.common.util.UserSessionUtil;
 import com.heloword.common.util.Util;
 
 import lombok.extern.slf4j.Slf4j;
+import static com.heloword.common.util.Util.getIdTokenFromRequest;
 
 @Slf4j
 @RestController
@@ -90,6 +91,30 @@ public class AuthRestController {
     } else {
       return HeloResponse.fail(ResponseCode.GOOGLE_VERIFICATION_ERROR);
     }
+  }
+
+  @GetMapping("/check-login-status")
+  public HeloResponse<?> checkLoginStatus(HttpServletRequest request) {
+    return Optional.ofNullable(getIdTokenFromRequest(request))
+        .map(userSessionUtil::getUserFromSession)
+        .map(user -> Map.of("isSessionValid", true))
+        .map(HeloResponse::successWithData)
+        .orElseGet(HeloResponse::successWithoutData);
+  }
+
+  @GetMapping("/logout")
+  public HeloResponse<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    String idTokenFromRequest = getIdTokenFromRequest(request);
+    Cookie cookie = new Cookie(AuthType.GOOGLE_ID_TOKEN.getKey(), idTokenFromRequest);
+    cookie.setPath(COOKIE_PATH);
+    cookie.setMaxAge(0);
+    response.addCookie(cookie);
+    return Optional.ofNullable(idTokenFromRequest)
+        .map(userSessionUtil::getUserFromSession)
+        .map(user -> userSessionUtil.removeUserFromSessionByKey(idTokenFromRequest))
+        .map(isLoggedOut -> Map.of("isLoggedOut", isLoggedOut))
+        .map(HeloResponse::successWithData)
+        .orElseGet(HeloResponse::successWithoutData);
   }
 
 }

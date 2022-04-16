@@ -20,14 +20,13 @@ public class UserSessionUtil {
   @Autowired
   Gson gson;
 
-  public void saveUserToSessionByEmail(MemberEntity memberEntity) {
-    redisTemplate.opsForValue().set(memberEntity.getEmail(), gson.toJson(memberEntity));
-    redisTemplate.expire(memberEntity.getEmail(), SESSION_EXPIRE_DAYS, TimeUnit.DAYS);
+  public Boolean saveUserToSessionByKey(String key, MemberEntity memberEntity) {
+    redisTemplate.opsForValue().set(key, gson.toJson(memberEntity));
+    return redisTemplate.expire(key, SESSION_EXPIRE_DAYS, TimeUnit.DAYS);
   }
 
-  public void saveUserToSessionByKey(String key, MemberEntity memberEntity) {
-    redisTemplate.opsForValue().set(key, gson.toJson(memberEntity));
-    redisTemplate.expire(key, SESSION_EXPIRE_DAYS, TimeUnit.DAYS);
+  public Boolean removeUserFromSessionByKey(String key) {
+    return redisTemplate.delete(key);
   }
 
   public Optional<MemberEntity> getUserFromSession(String key) {
