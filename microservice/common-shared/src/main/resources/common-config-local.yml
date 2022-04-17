@@ -13,6 +13,11 @@ cipher:
 
 feign:
   api-key: ${FEIGN_API_KEY}
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 20000
 
 spring:
 

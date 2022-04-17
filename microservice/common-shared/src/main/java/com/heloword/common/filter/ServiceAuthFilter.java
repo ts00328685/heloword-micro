@@ -82,7 +82,9 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
       additionalAuths.add(new SimpleGrantedAuthority(MemberRole.FEIGN.getName()));
     }
 
-    UserDetails userDetails = CustomUserDetails.of(userSessionUtil.getUserFromSession(idToken), additionalAuths);
+    Optional<MemberEntity> userFromSession = userSessionUtil.getUserFromSession(idToken);
+    CustomUserDetails userDetails = CustomUserDetails.of(userFromSession, additionalAuths);
+    userDetails.setMemberEntity(userFromSession.orElse(null));
 
     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
         userDetails,
@@ -90,7 +92,7 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
         userDetails.getAuthorities()
     );
 
-    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+    authentication.setDetails(userDetails);
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
     chain.doFilter(request, response);
@@ -101,6 +103,7 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
   public static class CustomUserDetails extends MemberEntity implements UserDetails {
 
     private Collection<? extends GrantedAuthority> grantedAuthority;
+    private MemberEntity memberEntity;
 
     public static CustomUserDetails of(Optional<MemberEntity> memberEntity, Set<GrantedAuthority> additionalAuth) {
       CustomUserDetails userDetails = CustomUserDetails.of(memberEntity);

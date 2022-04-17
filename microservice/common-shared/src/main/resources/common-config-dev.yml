@@ -5,10 +5,18 @@ eureka:
     serviceUrl:
       defaultZone: http://micro-infra-discovery.default.svc.cluster.local:8761/eureka
     enabled: true
+
 feign:
   api-key: ${FEIGN_API_KEY}
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 20000
   service-user:
     url: http://micro-service-user.default.svc.cluster.local:8001
+  service-word:
+    url: http://micro-service-word.default.svc.cluster.local:8002
 
 cipher:
   aes:

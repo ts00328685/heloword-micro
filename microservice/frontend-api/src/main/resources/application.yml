@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: frontend-api
+server:
+  servlet:
+    context-path: /api
+  port: 7001
+
+logging:
+  level:
+    org.springframework.*: debug
+    com.heloword.*: debug

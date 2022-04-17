@@ -17,12 +17,17 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
 
   @ExceptionHandler(value = {Exception.class})
-  @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
+  @ResponseStatus(value = HttpStatus.OK)
   public HeloResponse<?> handleExceptions(Exception ex, WebRequest request) {
 
     if (ex instanceof HeloServiceException) {
       log.error("handling global service error", ex);
       return HeloResponse.fail(((HeloServiceException) ex).getResponseCode());
+    }
+
+    if (ex instanceof AccessDeniedException) {
+      log.error("handling AccessDeniedException 403 error", ex);
+      return HeloResponse.fail(ResponseCode.INSUFFICIENT_AUTHORITY);
     }
 
     if (ex instanceof com.netflix.client.ClientException) {
