@@ -24,6 +24,7 @@
 		<module>service-auth</module>
 		<module>service-user</module>
 		<module>service-word</module>
+		<module>frontend-api</module>
 		<module>infra-gateway</module>
 		<module>infra-discovery</module>
 	</modules>
