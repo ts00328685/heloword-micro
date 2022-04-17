@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseRestController;
 import com.heloword.common.base.service.IBaseService;
-import com.heloword.common.entity.SentenceJapaneseEntity;
-import com.heloword.common.entity.WordEnglishEntity;
+import com.heloword.common.entity.word.WordEnglishEntity;
 import com.heloword.word.service.WordEnglishService;
 
 @RestController()

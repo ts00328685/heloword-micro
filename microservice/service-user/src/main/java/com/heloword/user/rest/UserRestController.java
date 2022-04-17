@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseRestController;
 import com.heloword.common.base.service.IBaseService;
-import com.heloword.common.entity.MemberEntity;
+import com.heloword.common.entity.user.MemberEntity;
 import com.heloword.user.service.MemberService;
 
 @RestController
@@ -25,6 +25,7 @@ public class UserRestController extends AbstractBaseRestController<MemberEntity,
 
   @GetMapping("/email/{email}")
   public HeloResponse<?> findByEmail(@PathVariable String email) {
+
     return success(memberService.findByEmail(email));
   }
   

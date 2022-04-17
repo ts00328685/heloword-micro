@@ -1,4 +1,4 @@
-package com.heloword.common.entity;
+package com.heloword.common.entity.word;
 
 import javax.persistence.Entity;
 import javax.persistence.SequenceGenerator;
@@ -13,8 +13,8 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @Data
 @Entity
-@SequenceGenerator(initialValue = 1, name = "id_generator", sequenceName = "word_japanese_seq")
-@Table(name = "WORD_JAPANESE")
-public class WordJapaneseEntity extends BaseWordEntity {
+@SequenceGenerator(initialValue = 1, name = "id_generator", sequenceName = "word_english_seq")
+@Table(name = "WORD_ENGLISH")
+public class WordEnglishEntity extends BaseWordEntity {
 
 }

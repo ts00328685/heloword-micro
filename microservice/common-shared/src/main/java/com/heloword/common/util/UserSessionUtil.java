@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import com.google.gson.Gson;
-import com.heloword.common.entity.MemberEntity;
+import com.heloword.common.entity.user.MemberEntity;
 
 @Component
 public class UserSessionUtil {

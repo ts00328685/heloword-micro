@@ -1,4 +1,4 @@
-package com.heloword.common.entity;
+package com.heloword.common.entity.user;
 
 import javax.persistence.Entity;
 import javax.persistence.SequenceGenerator;

@@ -1,4 +1,4 @@
-package com.heloword.common.entity;
+package com.heloword.common.entity.user;
 
 import java.util.Set;
 import javax.persistence.Column;
@@ -10,7 +10,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import org.springframework.data.redis.core.RedisHash;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.heloword.common.base.entity.BaseEntity;
 
 import lombok.AllArgsConstructor;

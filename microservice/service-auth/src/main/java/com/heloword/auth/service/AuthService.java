@@ -2,7 +2,7 @@ package com.heloword.auth.service;
 
 import java.util.Optional;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.heloword.common.entity.MemberEntity;
+import com.heloword.common.entity.user.MemberEntity;
 
 public interface AuthService {
   Optional<GoogleIdToken.Payload> verifyGoogleIdToken(String idToken);

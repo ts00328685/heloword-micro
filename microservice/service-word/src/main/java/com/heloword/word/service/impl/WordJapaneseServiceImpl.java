@@ -3,8 +3,8 @@ package com.heloword.word.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.heloword.common.base.service.AbstractBaseServiceImpl;
-import com.heloword.common.entity.WordJapaneseEntity;
-import com.heloword.common.repo.WordJapaneseRepository;
+import com.heloword.common.entity.word.WordJapaneseEntity;
+import com.heloword.common.repo.word.WordJapaneseRepository;
 import com.heloword.word.service.WordJapaneseService;
 
 @Service

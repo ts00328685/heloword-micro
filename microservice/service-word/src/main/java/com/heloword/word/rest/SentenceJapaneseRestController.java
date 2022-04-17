@@ -3,7 +3,6 @@ package com.heloword.word.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseRestController;
 import com.heloword.common.base.service.IBaseService;
-import com.heloword.common.entity.SentenceJapaneseEntity;
+import com.heloword.common.entity.word.SentenceJapaneseEntity;
 import com.heloword.word.service.SentenceJapaneseService;
 
 @RestController()

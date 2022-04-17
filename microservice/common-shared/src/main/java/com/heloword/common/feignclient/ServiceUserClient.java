@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import com.heloword.common.base.dto.HeloResponse;
-import com.heloword.common.entity.MemberEntity;
-import com.heloword.common.entity.RoleEntity;
+import com.heloword.common.entity.user.MemberEntity;
+import com.heloword.common.entity.user.RoleEntity;
 import com.heloword.common.filter.FeignClientInterceptor;
 
 @FeignClient(name = "SERVICE-USER", url = "${feign.service-user.url:}", configuration = FeignClientInterceptor.class)

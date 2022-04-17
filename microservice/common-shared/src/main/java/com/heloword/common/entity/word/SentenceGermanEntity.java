@@ -1,4 +1,4 @@
-package com.heloword.common.entity;
+package com.heloword.common.entity.word;
 
 import javax.persistence.Entity;
 import javax.persistence.SequenceGenerator;
@@ -9,12 +9,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+
 @NoArgsConstructor
 @Data
 @Entity
+@Table(name = "SENTENCE_GERMAN")
+@SequenceGenerator(initialValue = 1, name = "id_generator", sequenceName = "sentence_german_seq")
 @SuperBuilder
-@SequenceGenerator(initialValue = 1, name = "id_generator", sequenceName = "sentence_english_seq")
-@Table(name = "SENTENCE_ENGLISH")
-public class SentenceEnglishEntity extends BaseSentenceEntity {
+public class SentenceGermanEntity extends BaseSentenceEntity {
 
 }

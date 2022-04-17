@@ -1,4 +1,4 @@
-package com.heloword.common.config;
+package com.heloword.common.config.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.heloword.common.base.repo.IBaseRepo;
 import com.heloword.common.base.service.AbstractBaseServiceImpl;
-import com.heloword.common.entity.RoleEntity;
-import com.heloword.common.repo.RoleRepository;
+import com.heloword.common.entity.user.RoleEntity;
+import com.heloword.common.repo.user.RoleRepository;
 import com.heloword.user.service.RoleService;
 
 @Service
