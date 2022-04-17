@@ -1,14 +1,6 @@
 server:
   port: 9487
 
-eureka:
-  instance:
-    prefer-ip-address: true
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/,http://micro-infra-discovery.default.svc.cluster.local:8761/eureka
-    enabled: true
-
 spring:
   application:
     name: infra-gateway
@@ -19,10 +11,6 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-cipher:
-  aes:
-    key: ${AES_KEY}
-    iv: ${AES_IV}
 
 logging:
   level:
