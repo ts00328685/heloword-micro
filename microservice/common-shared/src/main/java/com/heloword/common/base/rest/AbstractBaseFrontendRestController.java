@@ -1,17 +1,20 @@
 package com.heloword.common.base.rest;
 
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.filter.ServiceAuthFilter;
 import com.heloword.common.model.dto.UserDto;
-import com.heloword.common.type.MemberRole;
 import com.heloword.common.type.ResponseCode;
+import com.heloword.common.util.UserSessionUtil;
 
 public abstract class AbstractBaseFrontendRestController{
 
 	public static final String BASE_FRONTEND_API_URL = "/fe";
-	public static final String MEMBER_ROLE = MemberRole.MEMBER.getName();
+
+	@Autowired
+	protected UserSessionUtil userSessionUtil;
 
 	protected Optional<UserDto> getUser() {
 		ServiceAuthFilter.CustomUserDetails details = (ServiceAuthFilter.CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();

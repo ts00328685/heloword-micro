@@ -18,7 +18,7 @@ import com.heloword.common.type.MemberRole;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  ServiceAuthFilter jwtTokenFilter;
+  ServiceAuthFilter serviceAuthFilter;
 
   @Autowired
   CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -49,7 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .anyRequest().authenticated();
 
     http.addFilterBefore(
-        jwtTokenFilter,
+        serviceAuthFilter,
         UsernamePasswordAuthenticationFilter.class
     );
   }

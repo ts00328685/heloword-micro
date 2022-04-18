@@ -20,6 +20,7 @@ import com.heloword.auth.service.AuthService;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.entity.user.MemberEntity;
 import com.heloword.common.exception.HeloServiceException;
+import com.heloword.common.model.dto.UserDto;
 import com.heloword.common.type.AuthType;
 import com.heloword.common.type.ResponseCode;
 import com.heloword.common.util.UserSessionUtil;
@@ -73,7 +74,7 @@ public class AuthRestController {
   }
 
   @PostMapping("/verify-google-id")
-  public HeloResponse<MemberEntity> verifyGoogleId(@RequestBody Map<String, ?> request, HttpServletResponse response) {
+  public HeloResponse<UserDto> verifyGoogleId(@RequestBody Map<String, ?> request, HttpServletResponse response) {
     String idToken = request.get(AuthType.GOOGLE_ID_TOKEN.getKey()).toString();
 
     Optional<GoogleIdToken.Payload> payload = authService.verifyGoogleIdToken(idToken);
@@ -87,7 +88,7 @@ public class AuthRestController {
       cookie.setSecure(!Util.isLocalEnv(environment));
       response.addCookie(cookie);
 
-      return HeloResponse.successWithData(existingMember);
+      return HeloResponse.successWithData(UserDto.fromEntity(existingMember));
     } else {
       return HeloResponse.fail(ResponseCode.GOOGLE_VERIFICATION_ERROR);
     }
