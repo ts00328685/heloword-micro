@@ -97,7 +97,7 @@ public class AuthRestController {
   @GetMapping("/check-login-status")
   public HeloResponse<?> checkLoginStatus(HttpServletRequest request) {
     return Optional.ofNullable(getIdTokenFromRequest(request))
-        .map(userSessionUtil::getUserFromSession)
+        .flatMap(userSessionUtil::getUserFromSession)
         .map(user -> Map.of("isSessionValid", true))
         .map(HeloResponse::successWithData)
         .orElseGet(HeloResponse::successWithoutData);
