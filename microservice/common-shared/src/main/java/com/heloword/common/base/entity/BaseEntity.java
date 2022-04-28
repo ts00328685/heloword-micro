@@ -27,5 +27,6 @@ public class BaseEntity {
   private Long createBy;
   private Integer status;
   private Integer version;
+  private String tableName;
 
 }

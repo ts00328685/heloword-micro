@@ -14,6 +14,7 @@ import lombok.experimental.SuperBuilder;
 public class BaseWordEntity extends BaseEntity {
 
   private String word;
+  private String phonetics;
   @Column(length = 2048)
   private String translateEn;
   @Column(length = 2048)
