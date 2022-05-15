@@ -2,7 +2,7 @@ package com.heloword.frontendapi.rest.user;
 
 import java.util.Map;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
@@ -19,7 +19,7 @@ import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.B
 public class UserRestController extends AbstractBaseFrontendRestController {
 
   @PreAuthorize("hasAnyAuthority('MEMBER')")
-  @GetMapping()
+  @PostMapping()
   public HeloResponse<?> getLoggedInUser() {
     return success(Map.of("user", getUser().orElse(null)));
   }

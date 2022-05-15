@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,7 +51,8 @@ public class AuthRestController {
   @Value("${cipher.aes.iv}")
   String aesIv;
 
-  @GetMapping("/init-cookie")
+  @CrossOrigin
+  @PostMapping("/init-cookie")
   public HeloResponse<?> initCookie(HttpServletResponse response) {
     Cookie cookie = new Cookie(AuthType.INIT_COOKIE_KEY.getKey(), AuthType.INIT_COOKIE_VALUE.getKey());
     cookie.setHttpOnly(true);
@@ -61,7 +62,8 @@ public class AuthRestController {
     return HeloResponse.successWithoutData();
   }
 
-  @GetMapping("/init-cipher")
+  @CrossOrigin
+  @PostMapping("/init-cipher")
   public HeloResponse<?> initAesKey(HttpServletRequest request) {
     Optional.ofNullable(request.getCookies())
         .map(Arrays::stream)
@@ -94,7 +96,7 @@ public class AuthRestController {
     }
   }
 
-  @GetMapping("/check-login-status")
+  @PostMapping("/check-login-status")
   public HeloResponse<?> checkLoginStatus(HttpServletRequest request) {
     return Optional.ofNullable(getIdTokenFromRequest(request))
         .flatMap(userSessionUtil::getUserFromSession)
@@ -103,7 +105,7 @@ public class AuthRestController {
         .orElseGet(HeloResponse::successWithoutData);
   }
 
-  @GetMapping("/logout")
+  @PostMapping("/logout")
   public HeloResponse<?> logout(HttpServletRequest request, HttpServletResponse response) {
     String idTokenFromRequest = getIdTokenFromRequest(request);
     Cookie cookie = new Cookie(AuthType.GOOGLE_ID_TOKEN.getKey(), idTokenFromRequest);

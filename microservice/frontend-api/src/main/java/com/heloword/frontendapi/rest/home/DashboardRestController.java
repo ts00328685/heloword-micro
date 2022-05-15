@@ -1,7 +1,7 @@
 package com.heloword.frontendapi.rest.home;
 
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
@@ -20,13 +20,13 @@ public class DashboardRestController extends AbstractBaseFrontendRestController 
 
   private DashboardService dashboardService;
 
-  @GetMapping()
+  @PostMapping()
   public HeloResponse<?> getDashboardInfo() {
     return success(dashboardService.getDashboardResponse(getUser()));
   }
 
   @PreAuthorize("hasAnyAuthority('MEMBER')")
-  @GetMapping("/total-word")
+  @PostMapping("/total-word")
   public HeloResponse<?> getTotalWord() {
     return success(dashboardService.getDashboardResponse(getUser()));
   }
