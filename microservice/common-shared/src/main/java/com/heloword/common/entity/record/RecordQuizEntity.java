@@ -19,6 +19,7 @@ import lombok.experimental.SuperBuilder;
 public class RecordQuizEntity extends BaseEntity {
   private String username;
   private Long answerId;
+  private Integer index;
   private String answerTableName;
   /** seconds */
   private Integer timeSpent;
