@@ -11,7 +11,7 @@ public class RecordQuizDto {
 
   private String username;
   private Long answerId;
-  private Integer index;
+  private Integer quizIndex;
   private String answerTableName;
   private Integer timeSpent;
   private Date startTime;
