@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: service-record
+
+server:
+  servlet:
+    context-path: /api
+  port: 8004
+
+logging:
+  level:
+    org.springframework: debug

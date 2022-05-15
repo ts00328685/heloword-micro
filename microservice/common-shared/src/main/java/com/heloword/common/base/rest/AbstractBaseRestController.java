@@ -1,5 +1,6 @@
 package com.heloword.common.base.rest;
 
+import java.util.List;
 import javax.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +17,7 @@ public abstract class AbstractBaseRestController<T, ID>{
 	protected abstract IBaseService<T, ID> getService();
 
 	@PostMapping()
-	public HeloResponse<?> create(@Valid @RequestBody T obj) {
+	public HeloResponse<?> save(@Valid @RequestBody T obj) {
 		return success(getService().save(obj));
 	}
 
@@ -31,8 +32,8 @@ public abstract class AbstractBaseRestController<T, ID>{
 	}
 
 	@PutMapping()
-	public HeloResponse<?> update(@Valid @RequestBody T obj) {
-		return success(getService().save(obj));
+	public HeloResponse<?> saveAll(@Valid @RequestBody List<T> objs) {
+		return success(getService().saveAll(objs));
 	}
 
 	@DeleteMapping()

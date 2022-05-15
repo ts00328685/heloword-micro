@@ -17,6 +17,9 @@ feign:
     url: http://micro-service-user.default.svc.cluster.local:8001
   service-word:
     url: http://micro-service-word.default.svc.cluster.local:8002
+  service-record:
+    url: http://micro-service-record.default.svc.cluster.local:8004
+
 cipher:
   aes:
     key: ${AES_KEY}
