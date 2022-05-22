@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  redis-config: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: helo-redis
+  name: helo-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: helo-redis
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: helo-redis
+    spec:
+      containers:
+        - image: redis
+          name: helo-redis
+          command:
+            - redis-server
+            - "/redis-master/redis.conf"
+          resources: {}
+          args: [ "--requirepass", "$(HELO_REDIS_PASSWORD)"]
+          env:
+            - name: TZ
+              value: Asia/Taipei
+            - name: HELO_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: heloword-secret
+                  key: HELO_REDIS_PASSWORD
+          volumeMounts:
+          - mountPath: /redis-master-data
+            name: data
+          - mountPath: /redis-master
+            name: config
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: redis-config
+            items:
+            - key: redis-config
+              path: redis.conf
