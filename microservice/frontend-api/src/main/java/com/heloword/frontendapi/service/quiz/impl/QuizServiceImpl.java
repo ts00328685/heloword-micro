@@ -1,6 +1,8 @@
 package com.heloword.frontendapi.service.quiz.impl;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import com.heloword.common.entity.record.RecordQuizSettingEntity;
@@ -12,6 +14,8 @@ import com.heloword.frontendapi.service.quiz.QuizService;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 @Log4j2
 @Service
@@ -33,5 +37,13 @@ public class QuizServiceImpl implements QuizService {
       return RecordQuizSettingDto.toEntity(dto);
     }).collect(Collectors.toList());
     return serviceRecordClient.saveAllQuizSettingRecord(entities).getData().stream().map(RecordQuizSettingEntity::getId).collect(Collectors.toList());
+  }
+
+  @Override
+  public Map<Date, List<RecordQuizSettingDto>> getQuizSettings(UserDto userDto) {
+    return serviceRecordClient.getQuizSettings(userDto.getUsername()).getData()
+        .parallelStream()
+        .map(RecordQuizSettingDto::fromEntity)
+        .collect(groupingBy(RecordQuizSettingDto::getTimestamp, toList()));
   }
 }

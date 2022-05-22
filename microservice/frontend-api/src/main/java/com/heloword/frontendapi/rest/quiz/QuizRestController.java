@@ -39,4 +39,10 @@ public class QuizRestController extends AbstractBaseFrontendRestController {
         Map.of("ids", quizService.saveAllQuizSettingRecord(getUser().get(), recordQuizSettingDtos))
     );
   }
+
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/get-quiz-settings")
+  public HeloResponse<?> getQuizSettings() {
+    return HeloResponse.successWithData(quizService.getQuizSettings(getUser().get()));
+  }
 }

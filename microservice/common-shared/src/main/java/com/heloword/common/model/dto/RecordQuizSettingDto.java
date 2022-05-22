@@ -9,8 +9,10 @@ import lombok.Data;
 @Data
 public class RecordQuizSettingDto {
 
+  private Long id;
   private String username;
   private Date timestamp;
+  private Date createTime;
   private String type;
   private Integer min;
   private Integer max;
@@ -23,4 +25,9 @@ public class RecordQuizSettingDto {
     return recordQuizSettingEntity;
   }
 
+  public static RecordQuizSettingDto fromEntity(RecordQuizSettingEntity recordQuizEntity) {
+    RecordQuizSettingDto recordQuizSettingEntity = new RecordQuizSettingDto();
+    BeanUtils.copyProperties(recordQuizEntity, recordQuizSettingEntity);
+    return recordQuizSettingEntity;
+  }
 }

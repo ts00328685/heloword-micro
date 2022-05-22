@@ -25,9 +25,4 @@ public class DashboardRestController extends AbstractBaseFrontendRestController 
     return success(dashboardService.getDashboardResponse(getUser()));
   }
 
-  @PreAuthorize("hasAnyAuthority('MEMBER')")
-  @PostMapping("/total-word")
-  public HeloResponse<?> getTotalWord() {
-    return success(dashboardService.getDashboardResponse(getUser()));
-  }
 }

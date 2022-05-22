@@ -7,8 +7,6 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.JpaRepository;
-import com.heloword.common.base.dto.BaseSearchBean;
 
 public interface IBaseService<T, ID> {
 
