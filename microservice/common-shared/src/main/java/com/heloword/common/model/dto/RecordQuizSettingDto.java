@@ -2,6 +2,8 @@ package com.heloword.common.model.dto;
 
 import java.util.Date;
 import org.springframework.beans.BeanUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.heloword.common.entity.record.RecordQuizSettingEntity;
 
 import lombok.Data;
@@ -10,6 +12,7 @@ import lombok.Data;
 public class RecordQuizSettingDto {
 
   private Long id;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String username;
   private Date timestamp;
   private Date createTime;
@@ -18,6 +21,7 @@ public class RecordQuizSettingDto {
   private Integer max;
   private Integer total;
   private Boolean isSelected;
+  private Integer finishedCount;
 
   public static RecordQuizSettingEntity toEntity(RecordQuizSettingDto recordQuizDto) {
     RecordQuizSettingEntity recordQuizSettingEntity = new RecordQuizSettingEntity();

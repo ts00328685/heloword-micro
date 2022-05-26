@@ -1,5 +1,7 @@
 package com.heloword.record.service.impl;
 
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.heloword.common.base.service.AbstractBaseServiceImpl;
@@ -16,6 +18,10 @@ public class RecordQuizSettingServiceImpl extends AbstractBaseServiceImpl<Record
   @Override
   protected RecordQuizSettingRepository getRepo() {
     return this.recordQuizSettingRepository;
+  }
+
+  public List<Map<String, Number>> getQuizSettingFinishedCount(String username) {
+    return recordQuizSettingRepository.getQuizSettingFinishedCount(username);
   }
 
 }

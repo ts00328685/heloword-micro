@@ -1,5 +1,8 @@
 package com.heloword.record.rest;
 
+import java.math.BigInteger;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -31,6 +34,15 @@ public class RecordQuizSettingRestController extends AbstractBaseRestController<
 		ExampleMatcher matcher = ExampleMatcher.matchingAny()
 				.withMatcher("username", ExampleMatcher.GenericPropertyMatchers.ignoreCase().exact());
 		return success(getService().findAll(Example.of(condition, matcher)));
+	}
+
+	@GetMapping("/get-finished-count")
+	public HeloResponse<?> getQuizSettingFinishedCount(@RequestHeader String username) {
+		return success(
+				recordQuizSettingService.getQuizSettingFinishedCount(username)
+						.parallelStream()
+						.collect(Collectors.toMap(k -> k.get("id"), v -> (BigInteger) v.get("finished_count")))
+		);
 	}
 
 }
