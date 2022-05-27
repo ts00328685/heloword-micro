@@ -1,15 +1,18 @@
 package com.heloword.frontendapi.service.home.impl;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.heloword.common.entity.user.RoleEntity;
 import com.heloword.common.exception.HeloServiceException;
 import com.heloword.common.feignclient.ServiceWordClient;
 import com.heloword.common.model.dto.UserDto;
+import com.heloword.common.type.MemberRole;
 import com.heloword.common.type.ResponseCode;
 import com.heloword.frontendapi.model.response.DashboardResponse;
 import com.heloword.frontendapi.service.home.DashboardService;
@@ -35,15 +38,25 @@ public class DashboardServiceImpl implements DashboardService {
     if (userDto.isPresent()) {
       ExecutorService executorService = Executors.newFixedThreadPool(6);
       DashboardResponse dashboardResponse = new DashboardResponse();
+
+      List<Callable<Integer>> normalUser = Arrays.asList(
+          fromRunnable(() -> dashboardResponse.setWordEnglishList(serviceWordClient.getAllEnWords().getData())),
+          fromRunnable(() -> dashboardResponse.setSentenceEnglishList(serviceWordClient.getAllEnSentences().getData()))
+      );
+
+      List<Callable<Integer>> admin = Arrays.asList(
+          fromRunnable(() -> dashboardResponse.setWordEnglishList(serviceWordClient.getAllEnWords().getData())),
+          fromRunnable(() -> dashboardResponse.setWordGermanList(serviceWordClient.getAllGeWords().getData())),
+          fromRunnable(() -> dashboardResponse.setWordJapaneseList(serviceWordClient.getAllJpWords().getData())),
+          fromRunnable(() -> dashboardResponse.setSentenceEnglishList(serviceWordClient.getAllEnSentences().getData())),
+          fromRunnable(() -> dashboardResponse.setSentenceGermanList(serviceWordClient.getAllGeSentences().getData())),
+          fromRunnable(() -> dashboardResponse.setSentenceJapaneseList(serviceWordClient.getAllJpSentences().getData()))
+      );
+
+      boolean isAdmin = userDto.get().getRoles().stream().map(RoleEntity::getRole).filter(role -> MemberRole.ADMIN.name().equals(role)).findAny().isPresent();
+
       try {
-        executorService.invokeAll(Arrays.asList(
-            fromRunnable(() -> dashboardResponse.setWordEnglishList(serviceWordClient.getAllEnWords().getData())),
-            fromRunnable(() -> dashboardResponse.setWordGermanList(serviceWordClient.getAllGeWords().getData())),
-            fromRunnable(() -> dashboardResponse.setWordJapaneseList(serviceWordClient.getAllJpWords().getData())),
-            fromRunnable(() -> dashboardResponse.setSentenceEnglishList(serviceWordClient.getAllEnSentences().getData())),
-            fromRunnable(() -> dashboardResponse.setSentenceGermanList(serviceWordClient.getAllGeSentences().getData())),
-            fromRunnable(() -> dashboardResponse.setSentenceJapaneseList(serviceWordClient.getAllJpSentences().getData()))
-        ));
+        executorService.invokeAll(isAdmin ? admin : normalUser);
       } catch (Exception e) {
         log.error(e);
         throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
