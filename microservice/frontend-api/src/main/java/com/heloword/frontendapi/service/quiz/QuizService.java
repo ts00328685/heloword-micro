@@ -11,4 +11,5 @@ public interface QuizService {
   void saveQuizRecord(UserDto userDto, RecordQuizDto recordQuizDto);
   List<Long> saveAllQuizSettingRecord(UserDto userDto, List<RecordQuizSettingDto> recordQuizSettingDto);
   Map<Date, List<RecordQuizSettingDto>> getQuizSettings(UserDto userDto);
+  Map<Long, List<Long>> getRecordIdsBySettingIds(UserDto userDto, List<Long> settingIds);
 }

@@ -7,5 +7,5 @@ import com.heloword.common.entity.record.RecordQuizEntity;
 
 @Repository
 public interface RecordQuizRepository extends IBaseRepo<RecordQuizEntity, Long> {
-  List<RecordQuizEntity> findAllByRecordQuizSettingIdIn(List<Long> ids);
+  List<RecordQuizEntity> findAllByUsernameAndRecordQuizSettingIdIn(String username, List<Long> ids);
 }

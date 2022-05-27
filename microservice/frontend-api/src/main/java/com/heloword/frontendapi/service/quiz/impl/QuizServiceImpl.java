@@ -53,6 +53,12 @@ public class QuizServiceImpl implements QuizService {
         .collect(groupingBy(RecordQuizSettingDto::getTimestamp, toList()));
   }
 
+  @Override
+  public Map<Long, List<Long>> getRecordIdsBySettingIds(UserDto userDto, List<Long> settingIds) {
+    return serviceRecordClient.getRecordIdsBySettingIds(userDto.getUsername(), settingIds).getData();
+  }
+
+
   private static RecordQuizSettingDto fillFinishedCount(RecordQuizSettingDto recordQuizSettingDto, Map<Long, Long> quizSettingFinishedCountMap) {
     recordQuizSettingDto.setFinishedCount(quizSettingFinishedCountMap.get(recordQuizSettingDto.getId()).intValue());
     return recordQuizSettingDto;
