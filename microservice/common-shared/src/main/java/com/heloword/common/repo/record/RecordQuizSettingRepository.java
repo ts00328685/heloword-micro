@@ -12,11 +12,13 @@ import com.heloword.common.entity.record.RecordQuizSettingEntity;
 public interface RecordQuizSettingRepository extends IBaseRepo<RecordQuizSettingEntity, Long> {
 
   @Query(nativeQuery = true, value =
-      "select rqs.id, count(*) as finished_count "
-          + "from record_quiz rq "
-          + "join record_quiz_setting rqs on rqs.id = rq.record_quiz_setting_id "
-          + "where rqs.username = :username "
-          + "group by rqs.id, rq.answer_table_name")
+      "select rqs.id, "
+          + " CASE WHEN rq.answer_table_name is null THEN 0 "
+          + " ELSE count(*) END as finished_count "
+          + " from record_quiz_setting rqs "
+          + " left join record_quiz rq on rqs.id = rq.record_quiz_setting_id "
+          + " where rqs.username = :username "
+          + " group by rqs.id, rq.answer_table_name")
   List<Map<String, Number>> getQuizSettingFinishedCount(@Param("username") String username);
 
 }

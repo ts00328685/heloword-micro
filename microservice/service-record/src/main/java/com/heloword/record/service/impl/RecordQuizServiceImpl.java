@@ -1,5 +1,6 @@
 package com.heloword.record.service.impl;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.heloword.common.base.service.AbstractBaseServiceImpl;
@@ -16,6 +17,10 @@ public class RecordQuizServiceImpl extends AbstractBaseServiceImpl<RecordQuizEnt
   @Override
   protected RecordQuizRepository getRepo() {
     return this.recordQuizRepository;
+  }
+
+  public List<RecordQuizEntity> getAllRecordsBySettingIds(List<Long> settingIds) {
+    return this.recordQuizRepository.findAllByRecordQuizSettingIdIn(settingIds);
   }
 
 }
