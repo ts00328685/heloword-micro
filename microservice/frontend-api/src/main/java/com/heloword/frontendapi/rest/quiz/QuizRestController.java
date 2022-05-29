@@ -49,7 +49,6 @@ public class QuizRestController extends AbstractBaseFrontendRestController {
   @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PostMapping("/get-record-ids-by-setting-ids")
   public HeloResponse<?> getRecordIdsBySettingIds(@RequestBody List<Long> settingIds) {
-    Map<Long, List<Long>> recordIdsBySettingIds = quizService.getRecordIdsBySettingIds(getUser().get(), settingIds);
     return HeloResponse.successWithData(quizService.getRecordIdsBySettingIds(getUser().get(), settingIds));
   }
 }
