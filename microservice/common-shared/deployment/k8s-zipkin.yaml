@@ -33,3 +33,28 @@ spec:
       targetPort: 9411
   selector:
     app: zipkin
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Accept-Encoding "";
+      sub_filter '<head>' '<head>\n<base href="/k8s/zipkin/">';
+      sub_filter_once on;
+    nginx.ingress.kubernetes.io/rewrite-target: /zipkin/$2
+  name: zipkin
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: zipkin
+                port:
+                  number: 9411
+            path: /zipkin(/|$)(.*)
+            pathType: Prefix
