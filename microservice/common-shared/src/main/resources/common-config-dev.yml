@@ -47,4 +47,6 @@ spring:
       dialect: org.hibernate.dialect.MySQL55Dialect
       ddl-auto: update
 
+  zipkin:
+    base-url: http://zipkin.default.svc.cluster.local:9411
 

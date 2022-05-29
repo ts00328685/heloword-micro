@@ -41,4 +41,7 @@ spring:
       dialect: org.hibernate.dialect.MySQL55Dialect
       ddl-auto: update
 
-
+  zipkin:
+    # default false for local env
+    enabled: false
+    base-url: http://localhost:9411
