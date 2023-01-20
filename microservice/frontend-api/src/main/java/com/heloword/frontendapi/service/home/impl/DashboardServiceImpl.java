@@ -38,10 +38,10 @@ public class DashboardServiceImpl implements DashboardService {
       try {
         executorService.invokeAll(Arrays.asList(
             fromRunnable(() -> dashboardResponse.setWordEnglishList(serviceWordClient.getAllEnWords().getData())),
-            fromRunnable(() -> dashboardResponse.setWordGermanList(serviceWordClient.getAllGeWords().getData())),
-            fromRunnable(() -> dashboardResponse.setWordJapaneseList(serviceWordClient.getAllJpWords().getData())),
-            fromRunnable(() -> dashboardResponse.setSentenceEnglishList(serviceWordClient.getAllEnSentences().getData())),
-            fromRunnable(() -> dashboardResponse.setSentenceGermanList(serviceWordClient.getAllGeSentences().getData())),
+//            fromRunnable(() -> dashboardResponse.setWordGermanList(serviceWordClient.getAllGeWords().getData())),
+//            fromRunnable(() -> dashboardResponse.setWordJapaneseList(serviceWordClient.getAllJpWords().getData())),
+//            fromRunnable(() -> dashboardResponse.setSentenceEnglishList(serviceWordClient.getAllEnSentences().getData())),
+//            fromRunnable(() -> dashboardResponse.setSentenceGermanList(serviceWordClient.getAllGeSentences().getData())),
             fromRunnable(() -> dashboardResponse.setSentenceJapaneseList(serviceWordClient.getAllJpSentences().getData()))
         ));
       } catch (Exception e) {
