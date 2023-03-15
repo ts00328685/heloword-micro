@@ -32,7 +32,6 @@ public class DashboardServiceImpl implements DashboardService {
 
   @Override
   public DashboardResponse getDashboardResponse(Optional<UserDto> userDto) {
-    if (userDto.isPresent()) {
       ExecutorService executorService = Executors.newFixedThreadPool(6);
       DashboardResponse dashboardResponse = new DashboardResponse();
       try {
@@ -52,9 +51,5 @@ public class DashboardServiceImpl implements DashboardService {
       }
       executorService.shutdown();
       return dashboardResponse;
-
-    } else {
-      return DashboardResponse.builder().wordEnglishList(serviceWordClient.getAllEnWords().getData()).build();
-    }
   }
 }
