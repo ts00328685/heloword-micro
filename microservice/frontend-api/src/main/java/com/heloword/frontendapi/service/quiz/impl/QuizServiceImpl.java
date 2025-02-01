@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.heloword.common.base.entity.BaseEntity;
 import org.springframework.stereotype.Service;
 import com.heloword.common.entity.record.RecordQuizSettingEntity;
 import com.heloword.common.feignclient.ServiceRecordClient;
@@ -42,14 +44,19 @@ public class QuizServiceImpl implements QuizService {
 
   @Override
   public Map<Date, List<RecordQuizSettingDto>> getQuizSettings(UserDto userDto) {
-    Stream<RecordQuizSettingDto> recordQuizSettingDtoStream = serviceRecordClient.getQuizSettings(userDto.getUsername()).getData()
+    List<RecordQuizSettingEntity> allSettings = serviceRecordClient.getQuizSettings(userDto.getUsername()).getData();
+    Stream<RecordQuizSettingDto> recordQuizSettingDtoStream = allSettings
         .parallelStream()
         .map(RecordQuizSettingDto::fromEntity);
 
     // setting id : finished_count
     Map<Long, Long> quizSettingFinishedCountMap = serviceRecordClient.getQuizSettingFinishedCount(userDto.getUsername()).getData();
-
-    return recordQuizSettingDtoStream.map(record -> fillFinishedCount(record, quizSettingFinishedCountMap))
+    Map<Long, Date> quizSettingAnyLatestFinishedTimeMap = serviceRecordClient.getLatestFinishedTimeBySettingIds(
+            userDto.getUsername(),
+            allSettings.stream().map(BaseEntity::getId).collect(toList())
+    ).getData();
+    return recordQuizSettingDtoStream
+            .map(record -> fillFinishedCountAndLatestFinishedTime(record, quizSettingFinishedCountMap, quizSettingAnyLatestFinishedTimeMap))
         .collect(groupingBy(RecordQuizSettingDto::getTimestamp, toList()));
   }
 
@@ -59,8 +66,9 @@ public class QuizServiceImpl implements QuizService {
   }
 
 
-  private static RecordQuizSettingDto fillFinishedCount(RecordQuizSettingDto recordQuizSettingDto, Map<Long, Long> quizSettingFinishedCountMap) {
+  private static RecordQuizSettingDto fillFinishedCountAndLatestFinishedTime(RecordQuizSettingDto recordQuizSettingDto, Map<Long, Long> quizSettingFinishedCountMap, Map<Long, Date> quizSettingAnyLatestFinishedTimeMap) {
     recordQuizSettingDto.setFinishedCount(quizSettingFinishedCountMap.get(recordQuizSettingDto.getId()).intValue());
+    recordQuizSettingDto.setLatestFinishedTime(quizSettingAnyLatestFinishedTimeMap.get(recordQuizSettingDto.getId()));
     return recordQuizSettingDto;
   }
 }

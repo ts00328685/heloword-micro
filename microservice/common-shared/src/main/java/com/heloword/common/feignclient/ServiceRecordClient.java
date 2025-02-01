@@ -1,5 +1,6 @@
 package com.heloword.common.feignclient;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -21,6 +22,9 @@ public interface ServiceRecordClient {
 
   @PostMapping("/api/record-quiz/get-by-setting-ids")
   HeloResponse<Map<Long, List<Long>>> getRecordIdsBySettingIds(@RequestHeader String username, @RequestBody List<Long> settingIds);
+
+  @PostMapping("/api/record-quiz/get-latest-finished-time-by-setting-ids")
+  HeloResponse<Map<Long, Date>> getLatestFinishedTimeBySettingIds(@RequestHeader String username, @RequestBody List<Long> settingIds);
 
   @PutMapping("/api/record-quiz-setting")
   HeloResponse<List<RecordQuizSettingEntity>> saveAllQuizSettingRecord(List<RecordQuizSettingEntity> recordQuizSettingEntity);

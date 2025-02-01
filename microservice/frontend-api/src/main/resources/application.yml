@@ -5,6 +5,8 @@ server:
   servlet:
     context-path: /api
   port: 7001
+  compression:
+    enabled: true
 
 logging:
   level:

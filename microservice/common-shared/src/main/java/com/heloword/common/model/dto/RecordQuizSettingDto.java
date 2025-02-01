@@ -16,6 +16,7 @@ public class RecordQuizSettingDto {
   private String username;
   private Date timestamp;
   private Date createTime;
+  private Date latestFinishedTime;
   private String type;
   private Integer min;
   private Integer max;

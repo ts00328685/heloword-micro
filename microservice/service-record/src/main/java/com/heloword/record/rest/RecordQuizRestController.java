@@ -1,9 +1,8 @@
 package com.heloword.record.rest;
 
 import java.util.List;
-import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -30,5 +29,10 @@ public class RecordQuizRestController extends AbstractBaseRestController<RecordQ
 	@PostMapping("/get-by-setting-ids")
 	public HeloResponse<?> getAllRecordsBySettingIds(@RequestBody List<Long> settingIds, @RequestHeader String username) {
 		return success(recordQuizService.getAllRecordsBySettingIds(settingIds, username));
+	}
+
+	@PostMapping("/get-latest-finished-time-by-setting-ids")
+	public HeloResponse<?> getLatestUpdateTimeBySettingIds(@RequestBody List<Long> settingIds, @RequestHeader String username) {
+		return success(recordQuizService.getLatestFinishedTimeBySettingIds(settingIds, username));
 	}
 }
