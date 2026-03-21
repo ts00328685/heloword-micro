@@ -70,7 +70,13 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
     String idToken = getIdTokenFromRequest(request);
 
     if (StringUtils.isEmpty(idToken) && Util.isLocalEnv(environment)) {
-      idToken = StringUtils.split(request.getHeader(HttpHeaders.AUTHORIZATION), StringUtils.SPACE)[1];
+      String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+      if (StringUtils.isNotEmpty(authHeader)) {
+        String[] parts = StringUtils.split(authHeader, StringUtils.SPACE);
+        if (parts != null && parts.length > 1) {
+          idToken = parts[1];
+        }
+      }
     }
 
     final String headerFeignApiKey = request.getHeader(AuthType.FEIGN_API_KEY.getKey());
