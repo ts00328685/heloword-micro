@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.entity.record.RecordQuizEntity;
 import com.heloword.common.entity.record.RecordQuizSettingEntity;
@@ -34,5 +35,8 @@ public interface ServiceRecordClient {
 
   @GetMapping("/api/record-quiz-setting/get-finished-count")
   HeloResponse<Map<Long, Long>> getQuizSettingFinishedCount(@RequestHeader String username);
+
+  @GetMapping("/api/record-quiz/get-by-date-range")
+  HeloResponse<List<RecordQuizEntity>> getRecordsByDateRange(@RequestHeader String username, @RequestParam long from, @RequestParam long to);
 
 }

@@ -34,6 +34,11 @@ public class RecordQuizServiceImpl extends AbstractBaseServiceImpl<RecordQuizEnt
   }
 
   @Override
+  public List<RecordQuizEntity> getRecordsByDateRange(String username, Date from, Date to) {
+    return this.recordQuizRepository.findAllByUsernameAndFinishedTimeBetween(username, from, to);
+  }
+
+  @Override
   public Map<Long, Date> getLatestFinishedTimeBySettingIds(List<Long> settingIds, String username) {
     return this.recordQuizRepository.findAllByUsernameAndRecordQuizSettingIdIn(username, settingIds).stream()
         .filter(aRecord -> aRecord.getFinishedTime() != null)

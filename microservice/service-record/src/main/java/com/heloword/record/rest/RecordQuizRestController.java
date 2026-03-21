@@ -1,12 +1,15 @@
 package com.heloword.record.rest;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseRestController;
@@ -34,5 +37,10 @@ public class RecordQuizRestController extends AbstractBaseRestController<RecordQ
 	@PostMapping("/get-latest-finished-time-by-setting-ids")
 	public HeloResponse<?> getLatestUpdateTimeBySettingIds(@RequestBody List<Long> settingIds, @RequestHeader String username) {
 		return success(recordQuizService.getLatestFinishedTimeBySettingIds(settingIds, username));
+	}
+
+	@GetMapping("/get-by-date-range")
+	public HeloResponse<?> getRecordsByDateRange(@RequestHeader String username, @RequestParam long from, @RequestParam long to) {
+		return success(recordQuizService.getRecordsByDateRange(username, new Date(from), new Date(to)));
 	}
 }
