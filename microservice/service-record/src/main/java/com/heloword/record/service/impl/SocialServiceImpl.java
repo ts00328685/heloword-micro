@@ -1,5 +1,7 @@
 package com.heloword.record.service.impl;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -27,19 +29,31 @@ public class SocialServiceImpl implements SocialService {
 
   @Override
   public List<FriendEntity> getFriends(String username) {
-    return Stream.concat(
-        friendRepository.findAllByRequesterUsername(username).stream(),
-        friendRepository.findAllByAddresseeUsername(username).stream()
-    ).collect(Collectors.toList());
+    // Also search with URL-encoded form for legacy corrupted records (e.g. '%40' for '@')
+    String encodedUsername = encodeUsername(username);
+    return Stream.of(
+        friendRepository.findAllByRequesterUsername(username),
+        friendRepository.findAllByAddresseeUsername(username),
+        encodedUsername.equals(username) ? List.of() : friendRepository.findAllByRequesterUsername(encodedUsername),
+        encodedUsername.equals(username) ? List.of() : friendRepository.findAllByAddresseeUsername(encodedUsername)
+    ).flatMap(List::stream)
+     .distinct()
+     .collect(Collectors.toList());
   }
 
   @Override
   public FriendEntity sendFriendRequest(String requesterUsername, String addresseeUsername) {
-    // Check if friendship already exists in either direction
-    if (friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, addresseeUsername).isPresent()) {
+    // Check if friendship already exists in either direction (also check encoded forms for legacy records)
+    String encodedRequester = encodeUsername(requesterUsername);
+    String encodedAddressee = encodeUsername(addresseeUsername);
+    if (friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, addresseeUsername).isPresent()
+        || friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedRequester, addresseeUsername).isPresent()
+        || friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, encodedAddressee).isPresent()) {
       throw new IllegalStateException("Friend request already exists");
     }
-    if (friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, requesterUsername).isPresent()) {
+    if (friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, requesterUsername).isPresent()
+        || friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedAddressee, requesterUsername).isPresent()
+        || friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, encodedRequester).isPresent()) {
       throw new IllegalStateException("Friend request already exists");
     }
     FriendEntity entity = FriendEntity.builder()
@@ -54,10 +68,14 @@ public class SocialServiceImpl implements SocialService {
   public FriendEntity acceptFriendRequest(String addresseeUsername, Long id) {
     FriendEntity entity = friendRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Friend request not found"));
-    if (!entity.getAddresseeUsername().equals(addresseeUsername)) {
+    // Decode stored value to handle legacy corrupted records
+    if (!decodeUsername(entity.getAddresseeUsername()).equals(addresseeUsername)) {
       throw new IllegalStateException("Not authorized");
     }
     entity.setFriendStatus("ACCEPTED");
+    // Self-heal: fix the stored username if it was corrupted
+    entity.setAddresseeUsername(addresseeUsername);
+    entity.setRequesterUsername(decodeUsername(entity.getRequesterUsername()));
     return friendRepository.save(entity);
   }
 
@@ -65,7 +83,7 @@ public class SocialServiceImpl implements SocialService {
   public void rejectFriendRequest(String addresseeUsername, Long id) {
     FriendEntity entity = friendRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Friend request not found"));
-    if (!entity.getAddresseeUsername().equals(addresseeUsername)) {
+    if (!decodeUsername(entity.getAddresseeUsername()).equals(addresseeUsername)) {
       throw new IllegalStateException("Not authorized");
     }
     friendRepository.delete(entity);
@@ -75,7 +93,8 @@ public class SocialServiceImpl implements SocialService {
   public void removeFriend(String username, Long id) {
     FriendEntity entity = friendRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Friend not found"));
-    if (!entity.getRequesterUsername().equals(username) && !entity.getAddresseeUsername().equals(username)) {
+    if (!decodeUsername(entity.getRequesterUsername()).equals(username)
+        && !decodeUsername(entity.getAddresseeUsername()).equals(username)) {
       throw new IllegalStateException("Not authorized");
     }
     friendRepository.delete(entity);
@@ -85,14 +104,34 @@ public class SocialServiceImpl implements SocialService {
   public void updateFriendNickname(String username, Long id, String nickname) {
     FriendEntity entity = friendRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Friend not found"));
-    if (entity.getRequesterUsername().equals(username)) {
+    if (decodeUsername(entity.getRequesterUsername()).equals(username)) {
       entity.setRequesterNickname(nickname);
-    } else if (entity.getAddresseeUsername().equals(username)) {
+    } else if (decodeUsername(entity.getAddresseeUsername()).equals(username)) {
       entity.setAddresseeNickname(nickname);
     } else {
       throw new IllegalStateException("Not authorized");
     }
     friendRepository.save(entity);
+  }
+
+  private static String decodeUsername(String value) {
+    if (value == null) return null;
+    try {
+      return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+    } catch (Exception e) {
+      return value;
+    }
+  }
+
+  /** Returns the percent-encoded form of a username (e.g. '@' → '%40'). */
+  private static String encodeUsername(String value) {
+    if (value == null) return null;
+    try {
+      return java.net.URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+          .replace("+", "%20"); // encode spaces as %20, not +
+    } catch (Exception e) {
+      return value;
+    }
   }
 
   // ── Chat ──────────────────────────────────────────────────────────────────
