@@ -105,5 +105,5 @@ spec:
                 name: ${APP_NAME}
                 port:
                   number: 7001
-            path: /k8s/${APP_NAME}/v${MAJOR_VERSION}/fe/ws
+            path: /${APP_NAME}/v${MAJOR_VERSION}/fe/ws
             pathType: Prefix
