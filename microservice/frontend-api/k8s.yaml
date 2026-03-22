@@ -83,4 +83,27 @@ spec:
     app: ${APP_NAME}
 status:
   loadBalancer: {}
-
+---
+# Direct WebSocket ingress — bypasses the gateway (browsers cannot send custom
+# headers on WS upgrade, so the gateway AuthFilter would reject it).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /api/fe/ws
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  name: ${APP_NAME}-ws
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: ${APP_NAME}
+                port:
+                  number: 7001
+            path: /k8s/${APP_NAME}/v${MAJOR_VERSION}/fe/ws
+            pathType: Prefix
