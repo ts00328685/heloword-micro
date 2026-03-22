@@ -3,10 +3,15 @@ package com.heloword.frontendapi.rest.user;
 import java.util.Map;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.apache.commons.lang3.StringUtils;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
+import com.heloword.common.entity.user.MemberEntity;
+import com.heloword.common.feignclient.ServiceUserClient;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -18,10 +23,26 @@ import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.B
 @AllArgsConstructor
 public class UserRestController extends AbstractBaseFrontendRestController {
 
+  private final ServiceUserClient serviceUserClient;
+
   @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PostMapping()
   public HeloResponse<?> getLoggedInUser() {
     return success(Map.of("user", getUser().orElse(null)));
+  }
+
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PutMapping("/nickname")
+  public HeloResponse<?> updateNickname(@RequestBody Map<String, String> body) {
+    String nickname = body.getOrDefault("nickname", "").trim();
+    if (StringUtils.isBlank(nickname)) return fail("Nickname must not be blank");
+    var user = getUser().orElseThrow();
+    MemberEntity member = serviceUserClient.getMemberByEmail(user.getEmail()).getData();
+    if (member == null) return fail("User not found");
+    member.setNickname(nickname);
+    serviceUserClient.createOrUpdatMember(member);
+    user.setNickname(nickname);
+    return success(Map.of("user", user));
   }
 
 }
