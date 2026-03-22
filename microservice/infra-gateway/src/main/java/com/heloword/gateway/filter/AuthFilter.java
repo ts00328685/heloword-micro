@@ -36,9 +36,13 @@ public class AuthFilter implements GlobalFilter {
     ExchangeCaptureWrapper exchangeCaptureWrapper = new ExchangeCaptureWrapper(exchange);
 
     String fullPath = exchange.getRequest().getPath().value();
-    if (StringUtils.startsWith(fullPath, "/api/auth/init-cookie")
-        || StringUtils.endsWith(fullPath, "/api/fe/ws")) {
+    if (StringUtils.startsWith(fullPath, "/api/auth/init-cookie")) {
       return getVoidMono(chain, exchangeCaptureWrapper);
+    }
+    // WebSocket upgrade requests cannot carry custom headers (no cv), and the
+    // capture wrapper interferes with the WS routing filter — pass original exchange.
+    if (StringUtils.endsWith(fullPath, "/api/fe/ws")) {
+      return chain.filter(exchange);
     }
 
     Optional.ofNullable(exchange.getRequest().getCookies())
