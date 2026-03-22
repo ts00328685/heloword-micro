@@ -16,9 +16,8 @@ import com.heloword.common.model.dto.UserDto;
 import com.heloword.frontendapi.model.request.HeartbeatRequest;
 import com.heloword.frontendapi.model.response.FriendResponseDto;
 import com.heloword.frontendapi.model.response.OnlineUserDto;
-import com.heloword.frontendapi.service.social.OnlineSseService;
 import com.heloword.frontendapi.service.social.SocialFrontendService;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import com.heloword.frontendapi.service.social.SocialPushService;
 
 @Log4j2
 @Service
@@ -31,20 +30,19 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   private RedisTemplate<String, Object> redisTemplate;
   private ServiceRecordClient serviceRecordClient;
-  private OnlineSseService onlineSseService;
+  private SocialPushService socialPushService;
 
   @Override
   public void heartbeat(HeartbeatRequest request) {
     double score = System.currentTimeMillis();
     String member = request.getUserId() + "|" + request.getDisplayName() + "|" + (Boolean.TRUE.equals(request.getIsGuest()) ? "1" : "0");
     redisTemplate.opsForZSet().add(ONLINE_KEY, member, score);
-    // Push updated list to all SSE subscribers immediately
-    onlineSseService.broadcastOnlineUsers(getOnlineUsers());
+    // Push updated list to all WebSocket subscribers immediately
+    socialPushService.broadcastOnlineUsers(getOnlineUsers());
   }
 
   @Override
   public void removeHeartbeat(String userId) {
-    // Remove any member whose first segment matches the userId
     long cutoff = System.currentTimeMillis() - ONLINE_WINDOW_MS;
     Set<Object> members = redisTemplate.opsForZSet().rangeByScore(ONLINE_KEY, cutoff, Double.MAX_VALUE);
     if (members != null) {
@@ -52,30 +50,13 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
           .filter(m -> ((String) m).startsWith(userId + "|"))
           .forEach(m -> redisTemplate.opsForZSet().remove(ONLINE_KEY, m));
     }
-    onlineSseService.broadcastOnlineUsers(getOnlineUsers());
-  }
-
-  @Override
-  public SseEmitter subscribeForUser(String userId) {
-    SseEmitter emitter = onlineSseService.createEmitterForUser(userId);
-    // Send current snapshot immediately so the client doesn't wait for the next heartbeat
-    try {
-      emitter.send(SseEmitter.event()
-          .name("online-users")
-          .data(getOnlineUsers()));
-    } catch (Exception e) {
-      log.warn("Failed to send initial online-users snapshot for {}: {}", userId, e.getMessage());
-      emitter.completeWithError(e);
-    }
-    return emitter;
+    socialPushService.broadcastOnlineUsers(getOnlineUsers());
   }
 
   @Override
   public List<OnlineUserDto> getOnlineUsers() {
     long cutoff = System.currentTimeMillis() - ONLINE_WINDOW_MS;
-    // Remove stale entries
     redisTemplate.opsForZSet().removeRangeByScore(ONLINE_KEY, 0, cutoff - 1);
-    // Retrieve current members
     Set<Object> members = redisTemplate.opsForZSet().rangeByScore(ONLINE_KEY, cutoff, Double.MAX_VALUE);
     if (members == null) return new ArrayList<>();
     return members.stream()
@@ -104,7 +85,6 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
     List<FriendDto> friends = serviceRecordClient.getFriends(user.getUsername()).getData();
     if (friends == null) return new ArrayList<>();
 
-    // Get online set to mark who's online
     Set<String> onlineIds = getOnlineUsers().stream()
         .map(OnlineUserDto::getUserId)
         .collect(Collectors.toSet());
@@ -136,12 +116,15 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   @Override
   public FriendDto sendFriendRequest(UserDto user, String addresseeUsername) {
-    FriendDto saved = serviceRecordClient.sendFriendRequest(user.getUsername(), addresseeUsername).getData();
-    // Notify the addressee in real-time so their badge updates immediately
-    onlineSseService.sendToUser(
-        addresseeUsername,
-        SseEmitter.event().name("new-friend-request").data(user.getUsername()));
-    return saved;
+    try {
+      FriendDto saved = serviceRecordClient.sendFriendRequest(user.getUsername(), addresseeUsername).getData();
+      socialPushService.sendFriendRequestToUser(addresseeUsername, user.getUsername());
+      return saved;
+    } catch (Exception e) {
+      log.error("sendFriendRequest feign call failed — requester={} addressee={}: {}",
+          user.getUsername(), addresseeUsername, e.getMessage(), e);
+      throw e;
+    }
   }
 
   @Override
@@ -166,27 +149,47 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   @Override
   public ChatMessageDto sendMessage(ChatMessageDto dto) {
-    ChatMessageDto saved = serviceRecordClient.sendMessage(dto).getData();
-    if (saved != null && saved.getRecipientUserId() != null) {
-      onlineSseService.sendToUser(
-          saved.getRecipientUserId(),
-          SseEmitter.event().name("new-message").data(saved));
+    try {
+      ChatMessageDto saved = serviceRecordClient.sendMessage(dto).getData();
+      if (saved != null && saved.getRecipientUserId() != null) {
+        socialPushService.sendMessageToUser(saved.getRecipientUserId(), saved);
+      }
+      return saved;
+    } catch (Exception e) {
+      log.error("sendMessage feign call failed — sender={} recipient={}: {}",
+          dto.getSenderUserId(), dto.getRecipientUserId(), e.getMessage(), e);
+      throw e;
     }
-    return saved;
   }
 
   @Override
   public List<ChatMessageDto> getMessages(String roomId, Long since) {
-    return serviceRecordClient.getMessages(roomId, since).getData();
+    try {
+      return serviceRecordClient.getMessages(roomId, since).getData();
+    } catch (Exception e) {
+      log.error("getMessages feign call failed — roomId={}: {}", roomId, e.getMessage(), e);
+      throw e;
+    }
   }
 
   @Override
   public void markRoomRead(String recipientUserId, String roomId) {
-    serviceRecordClient.markRoomRead(recipientUserId, roomId);
+    try {
+      serviceRecordClient.markRoomRead(recipientUserId, roomId);
+    } catch (Exception e) {
+      log.warn("markRoomRead feign call failed — recipientUserId={} roomId={}: {}",
+          recipientUserId, roomId, e.getMessage());
+    }
   }
 
   @Override
   public Map<String, Long> getUnreadCounts(String recipientUserId) {
-    return serviceRecordClient.getUnreadCounts(recipientUserId).getData();
+    try {
+      return serviceRecordClient.getUnreadCounts(recipientUserId).getData();
+    } catch (Exception e) {
+      log.error("getUnreadCounts feign call failed — recipientUserId={}: {}",
+          recipientUserId, e.getMessage(), e);
+      throw e;
+    }
   }
 }
