@@ -36,7 +36,8 @@ public class AuthFilter implements GlobalFilter {
     ExchangeCaptureWrapper exchangeCaptureWrapper = new ExchangeCaptureWrapper(exchange);
 
     String fullPath = exchange.getRequest().getPath().value();
-    if (StringUtils.startsWith(fullPath, "/api/auth/init-cookie")) {
+    if (StringUtils.startsWith(fullPath, "/api/auth/init-cookie")
+        || StringUtils.endsWith(fullPath, "/api/fe/ws")) {
       return getVoidMono(chain, exchangeCaptureWrapper);
     }
 
