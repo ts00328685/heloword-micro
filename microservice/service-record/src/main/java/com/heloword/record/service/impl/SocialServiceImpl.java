@@ -34,8 +34,8 @@ public class SocialServiceImpl implements SocialService {
     return Stream.of(
         friendRepository.findAllByRequesterUsername(username),
         friendRepository.findAllByAddresseeUsername(username),
-        encodedUsername.equals(username) ? List.of() : friendRepository.findAllByRequesterUsername(encodedUsername),
-        encodedUsername.equals(username) ? List.of() : friendRepository.findAllByAddresseeUsername(encodedUsername)
+        encodedUsername.equals(username) ? List.<FriendEntity>of() : friendRepository.findAllByRequesterUsername(encodedUsername),
+        encodedUsername.equals(username) ? List.<FriendEntity>of() : friendRepository.findAllByAddresseeUsername(encodedUsername)
     ).flatMap(List::stream)
      .distinct()
      .collect(Collectors.toList());
