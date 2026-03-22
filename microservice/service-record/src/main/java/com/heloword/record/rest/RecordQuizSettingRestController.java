@@ -1,6 +1,8 @@
 package com.heloword.record.rest;
 
 import java.math.BigInteger;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,7 @@ public class RecordQuizSettingRestController extends AbstractBaseRestController<
 
 	@GetMapping("/get-quiz-settings")
 	public HeloResponse<?> getQuizSettings(@RequestHeader String username) {
-		RecordQuizSettingEntity condition = RecordQuizSettingEntity.builder().username(username).build();
+		RecordQuizSettingEntity condition = RecordQuizSettingEntity.builder().username(decodeHeader(username)).build();
 		ExampleMatcher matcher = ExampleMatcher.matchingAny()
 				.withMatcher("username", ExampleMatcher.GenericPropertyMatchers.ignoreCase().exact());
 		return success(getService().findAll(Example.of(condition, matcher)));
@@ -39,10 +41,19 @@ public class RecordQuizSettingRestController extends AbstractBaseRestController<
 	@GetMapping("/get-finished-count")
 	public HeloResponse<?> getQuizSettingFinishedCount(@RequestHeader String username) {
 		return success(
-				recordQuizSettingService.getQuizSettingFinishedCount(username)
+				recordQuizSettingService.getQuizSettingFinishedCount(decodeHeader(username))
 						.parallelStream()
 						.collect(Collectors.toMap(k -> k.get("id"), v -> (BigInteger) v.get("finished_count")))
 		);
+	}
+
+	private static String decodeHeader(String value) {
+		if (value == null) return null;
+		try {
+			return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+		} catch (Exception e) {
+			return value;
+		}
 	}
 
 }

@@ -1,5 +1,7 @@
 package com.heloword.record.rest;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
@@ -31,16 +33,25 @@ public class RecordQuizRestController extends AbstractBaseRestController<RecordQ
 
 	@PostMapping("/get-by-setting-ids")
 	public HeloResponse<?> getAllRecordsBySettingIds(@RequestBody List<Long> settingIds, @RequestHeader String username) {
-		return success(recordQuizService.getAllRecordsBySettingIds(settingIds, username));
+		return success(recordQuizService.getAllRecordsBySettingIds(settingIds, decodeHeader(username)));
 	}
 
 	@PostMapping("/get-latest-finished-time-by-setting-ids")
 	public HeloResponse<?> getLatestUpdateTimeBySettingIds(@RequestBody List<Long> settingIds, @RequestHeader String username) {
-		return success(recordQuizService.getLatestFinishedTimeBySettingIds(settingIds, username));
+		return success(recordQuizService.getLatestFinishedTimeBySettingIds(settingIds, decodeHeader(username)));
 	}
 
 	@GetMapping("/get-by-date-range")
 	public HeloResponse<?> getRecordsByDateRange(@RequestHeader String username, @RequestParam long from, @RequestParam long to) {
-		return success(recordQuizService.getRecordsByDateRange(username, new Date(from), new Date(to)));
+		return success(recordQuizService.getRecordsByDateRange(decodeHeader(username), new Date(from), new Date(to)));
+	}
+
+	private static String decodeHeader(String value) {
+		if (value == null) return null;
+		try {
+			return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+		} catch (Exception e) {
+			return value;
+		}
 	}
 }

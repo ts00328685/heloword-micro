@@ -1,5 +1,7 @@
 package com.heloword.frontendapi.service.social.impl;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -90,8 +92,13 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
         .collect(Collectors.toSet());
 
     return friends.stream().map(f -> {
-      boolean iAmRequester = user.getUsername().equals(f.getRequesterUsername());
-      String otherUserId = iAmRequester ? f.getAddresseeUsername() : f.getRequesterUsername();
+      // Usernames may have been stored URL-encoded (Feign 10.x encodes '@' → '%40')
+      // in older records; decode them so display and comparisons use the raw value.
+      String requesterUsername = decodeUsername(f.getRequesterUsername());
+      String addresseeUsername = decodeUsername(f.getAddresseeUsername());
+
+      boolean iAmRequester = user.getUsername().equals(requesterUsername);
+      String otherUserId = iAmRequester ? addresseeUsername : requesterUsername;
       String myNickname = iAmRequester ? f.getRequesterNickname() : f.getAddresseeNickname();
 
       String status;
@@ -190,6 +197,16 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
       log.error("getUnreadCounts feign call failed — recipientUserId={}: {}",
           recipientUserId, e.getMessage(), e);
       throw e;
+    }
+  }
+
+  /** Decode percent-encoded usernames from legacy records (e.g. '%40' → '@'). */
+  private static String decodeUsername(String value) {
+    if (value == null) return null;
+    try {
+      return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+    } catch (Exception e) {
+      return value;
     }
   }
 }
