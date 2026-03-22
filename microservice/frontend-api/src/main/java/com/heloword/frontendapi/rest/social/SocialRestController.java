@@ -5,7 +5,6 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import com.heloword.common.model.dto.ChatMessageDto;
@@ -48,15 +46,6 @@ public class SocialRestController extends AbstractBaseFrontendRestController {
   @GetMapping("/online-users")
   public HeloResponse<?> getOnlineUsers() {
     return HeloResponse.successWithData(socialFrontendService.getOnlineUsers());
-  }
-
-  /**
-   * Per-user SSE stream — client receives "online-users" events on any heartbeat,
-   * and "new-message" events when a message is sent to this user.
-   */
-  @GetMapping(value = "/stream/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public SseEmitter streamForUser(@PathVariable String userId) {
-    return socialFrontendService.subscribeForUser(userId);
   }
 
   // ── Chat (no auth restriction) ────────────────────────────────────────────

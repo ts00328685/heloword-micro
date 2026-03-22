@@ -8,7 +8,6 @@ import com.heloword.common.model.dto.UserDto;
 import com.heloword.frontendapi.model.request.HeartbeatRequest;
 import com.heloword.frontendapi.model.response.FriendResponseDto;
 import com.heloword.frontendapi.model.response.OnlineUserDto;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface SocialFrontendService {
 
@@ -17,9 +16,6 @@ public interface SocialFrontendService {
   void removeHeartbeat(String userId);
 
   List<OnlineUserDto> getOnlineUsers();
-
-  /** Create a per-user SSE emitter and immediately send the current online list. */
-  SseEmitter subscribeForUser(String userId);
 
   List<FriendResponseDto> getFriends(UserDto user);
 
