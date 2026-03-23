@@ -35,7 +35,7 @@ import com.heloword.frontendapi.service.challenge.ChallengeService;
 public class ChallengeServiceImpl implements ChallengeService {
 
   private static final String SYSTEM_ROOM_ID = "system";
-  private static final int QUESTION_TIMEOUT_SECONDS = 15;
+  private static final int QUESTION_TIMEOUT_SECONDS = 10;
   private static final int NEXT_QUESTION_DELAY_SECONDS = 3;
   private static final int SYSTEM_RESTART_DELAY_SECONDS = 10;
   private static final int MAX_POOL_SIZE = 200;
@@ -357,8 +357,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         .players(playerList).build();
   }
 
-  /** Builds a hint string: first letter of each word visible, rest as underscores.
-   *  e.g. "tide" → "t _ _ _", "new york" → "n _ _   y _ _ _" */
+  /** Builds a hint string: first and last letter of each word visible, middle as underscores.
+   *  e.g. "tide" → "t _ _ e", "new york" → "n _ w   y _ _ k", "hi" → "h i", "a" → "a" */
   private String buildHint(String answer) {
     if (StringUtils.isBlank(answer)) return "";
     String[] words = answer.trim().split(" ");
@@ -366,9 +366,14 @@ public class ChallengeServiceImpl implements ChallengeService {
     for (int w = 0; w < words.length; w++) {
       if (w > 0) sb.append("   ");
       String word = words[w];
-      for (int i = 0; i < word.length(); i++) {
+      int len = word.length();
+      for (int i = 0; i < len; i++) {
         if (i > 0) sb.append(" ");
-        sb.append(i == 0 ? word.charAt(0) : '_');
+        if (i == 0 || i == len - 1) {
+          sb.append(word.charAt(i));
+        } else {
+          sb.append('_');
+        }
       }
     }
     return sb.toString();
