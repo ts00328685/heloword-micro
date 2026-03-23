@@ -24,4 +24,7 @@ public class ChallengeRoomState {
   private ConcurrentHashMap<String, ChallengePlayerState> players = new ConcurrentHashMap<>();
   private List<ChallengeQuestion> questions; // shuffled pool
   private volatile ScheduledFuture<?> questionTimer;
+  /** Optional word ID range filter applied when loading the pool (0 = no filter) */
+  private int wordMinId;
+  private int wordMaxId;
 }

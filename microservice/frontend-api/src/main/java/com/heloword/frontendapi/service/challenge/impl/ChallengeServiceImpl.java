@@ -35,10 +35,12 @@ import com.heloword.frontendapi.service.challenge.ChallengeService;
 public class ChallengeServiceImpl implements ChallengeService {
 
   private static final String SYSTEM_ROOM_ID = "system";
-  private static final int QUESTION_TIMEOUT_SECONDS = 15;
+  private static final int QUESTION_TIMEOUT_SECONDS = 10;
   private static final int NEXT_QUESTION_DELAY_SECONDS = 3;
   private static final int SYSTEM_RESTART_DELAY_SECONDS = 10;
   private static final int MAX_POOL_SIZE = 200;
+  private static final int SYSTEM_WORD_MIN_ID = 3000;
+  private static final int SYSTEM_WORD_MAX_ID = 6421;
 
   @Autowired
   private ServiceWordClient serviceWordClient;
@@ -60,6 +62,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         .status("WAITING")
         .system(true)
         .totalRounds(10)
+        .wordMinId(SYSTEM_WORD_MIN_ID)
+        .wordMaxId(SYSTEM_WORD_MAX_ID)
         .build();
     rooms.put(SYSTEM_ROOM_ID, systemRoom);
     log.info("Challenge system room initialized");
@@ -135,7 +139,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     if (!room.isSystem() && !room.getHostUserId().equals(requestingUserId)) return;
     if ("PLAYING".equals(room.getStatus())) return;
 
-    List<ChallengeQuestion> pool = loadWordPool(room.getGameType());
+    List<ChallengeQuestion> pool = loadWordPool(room.getGameType(), room.getWordMinId(), room.getWordMaxId());
     if (pool.isEmpty()) {
       log.warn("No questions available for gameType={}", room.getGameType());
       return;
@@ -162,22 +166,35 @@ public class ChallengeServiceImpl implements ChallengeService {
     if (!answer.getQuestionId().equals(room.getCurrentQuestionId())) return;
     if (StringUtils.isBlank(answer.getAnswer())) return;
 
-    String normalized = answer.getAnswer().toLowerCase().trim();
-    if (!normalized.equals(room.getCurrentCorrectAnswer())) return;
-
-    // Correct answer — only first one wins
-    synchronized (room) {
-      if (!answer.getQuestionId().equals(room.getCurrentQuestionId())) return;
-      room.setCurrentQuestionId(null); // prevent double-win
-    }
-
-    cancelTimer(room);
-    // Ensure player exists in room (late joiners)
+    // Ensure player exists (late joiners)
     room.getPlayers().computeIfAbsent(answer.getUserId(), uid ->
         ChallengePlayerState.builder().userId(uid).displayName(answer.getDisplayName())
             .score(0).guest(answer.isGuest()).build());
+
+    String normalized = answer.getAnswer().toLowerCase().trim();
+
+    if (!normalized.equals(room.getCurrentCorrectAnswer())) {
+      // Wrong answer — deduct 1 point (floor at -999) and notify room
+      ChallengePlayerState player = room.getPlayers().get(answer.getUserId());
+      player.setScore(player.getScore() - 1);
+      pushService.broadcastRoomEvent(roomId, ChallengeEventDto.builder()
+          .type("WRONG_ANSWER")
+          .targetUserId(answer.getUserId())
+          .scores(buildScores(room))
+          .build());
+      return;
+    }
+
+    // Correct answer — only first one wins (synchronized double-win guard)
+    synchronized (room) {
+      if (!answer.getQuestionId().equals(room.getCurrentQuestionId())) return;
+      room.setCurrentQuestionId(null);
+    }
+
+    cancelTimer(room);
+    int points = pointsForWord(room.getCurrentCorrectAnswer());
     room.getPlayers().get(answer.getUserId()).setScore(
-        room.getPlayers().get(answer.getUserId()).getScore() + 1);
+        room.getPlayers().get(answer.getUserId()).getScore() + points);
 
     Map<String, Integer> scores = buildScores(room);
     pushService.broadcastRoomEvent(roomId, ChallengeEventDto.builder()
@@ -185,6 +202,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         .winnerId(answer.getUserId())
         .winnerName(answer.getDisplayName())
         .correctAnswer(room.getCurrentCorrectAnswer())
+        .pointsAwarded(points)
         .scores(scores)
         .build());
     broadcastRoomList();
@@ -222,6 +240,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         .question(q.getQuestion())
         .questionId(q.getId())
         .timeoutSeconds(QUESTION_TIMEOUT_SECONDS)
+        .hint(buildHint(q.getNormalizedAnswer()))
         .build());
 
     // Schedule timeout
@@ -276,20 +295,26 @@ public class ChallengeServiceImpl implements ChallengeService {
         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getScore()));
   }
 
-  private List<ChallengeQuestion> loadWordPool(String gameType) {
-    return wordCache.computeIfAbsent(gameType, gt -> {
+  private List<ChallengeQuestion> loadWordPool(String gameType, int minId, int maxId) {
+    String cacheKey = (minId > 0 || maxId > 0) ? gameType + ":" + minId + ":" + maxId : gameType;
+    return wordCache.computeIfAbsent(cacheKey, k -> {
       try {
-        List<? extends BaseWordEntity> words = fetchWords(gt);
+        List<? extends BaseWordEntity> words = fetchWords(gameType);
         List<ChallengeQuestion> questions = words.stream()
+            .filter(w -> {
+              if (minId <= 0 && maxId <= 0) return true;
+              long id = w.getId();
+              return id >= minId && id <= maxId;
+            })
             .map(this::toQuestion)
             .filter(q -> q != null)
             .limit(MAX_POOL_SIZE)
             .collect(Collectors.toList());
         Collections.shuffle(questions);
-        log.info("Loaded {} questions for gameType={}", questions.size(), gt);
+        log.info("Loaded {} questions for cacheKey={}", questions.size(), cacheKey);
         return questions;
       } catch (Exception e) {
-        log.error("Failed to load word pool for gameType={}", gt, e);
+        log.error("Failed to load word pool for cacheKey={}", cacheKey, e);
         return new ArrayList<>();
       }
     });
@@ -330,6 +355,37 @@ public class ChallengeServiceImpl implements ChallengeService {
         .gameType(room.getGameType()).status(room.getStatus()).system(room.isSystem())
         .totalRounds(room.getTotalRounds()).currentRound(room.getCurrentRound())
         .players(playerList).build();
+  }
+
+  /** Builds a hint string: first and last letter of each word visible, middle as underscores.
+   *  e.g. "tide" → "t _ _ e", "new york" → "n _ w   y _ _ k", "hi" → "h i", "a" → "a" */
+  private String buildHint(String answer) {
+    if (StringUtils.isBlank(answer)) return "";
+    String[] words = answer.trim().split(" ");
+    StringBuilder sb = new StringBuilder();
+    for (int w = 0; w < words.length; w++) {
+      if (w > 0) sb.append("   ");
+      String word = words[w];
+      int len = word.length();
+      for (int i = 0; i < len; i++) {
+        if (i > 0) sb.append(" ");
+        if (i == 0 || i == len - 1) {
+          sb.append(word.charAt(i));
+        } else {
+          sb.append('_');
+        }
+      }
+    }
+    return sb.toString();
+  }
+
+  /** +1 for 1–4 chars, +2 for 5–7 chars, +3 for 8+ chars */
+  private int pointsForWord(String word) {
+    if (word == null) return 1;
+    int len = word.trim().length();
+    if (len >= 8) return 3;
+    if (len >= 5) return 2;
+    return 1;
   }
 
   private void broadcastRoomList() {
