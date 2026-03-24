@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +31,13 @@ public class RecordQuizRestController extends AbstractBaseRestController<RecordQ
 	@Override
 	public IBaseService<RecordQuizEntity, Long> getService() {
 		return recordQuizService;
+	}
+
+	@PostMapping("/delete-by-setting-ids")
+	@Transactional
+	public HeloResponse<?> deleteBySettingIds(@RequestBody List<Long> settingIds) {
+		recordQuizService.deleteBySettingIds(settingIds);
+		return success();
 	}
 
 	@PostMapping("/get-by-setting-ids")

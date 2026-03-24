@@ -7,4 +7,5 @@ import com.heloword.common.entity.record.RecordQuizSettingEntity;
 
 public interface RecordQuizSettingService extends IBaseService<RecordQuizSettingEntity, Long> {
   List<Map<String, Number>> getQuizSettingFinishedCount(String username);
+  void deleteBatch(List<Long> ids);
 }

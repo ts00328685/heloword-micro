@@ -10,4 +10,5 @@ public interface RecordQuizService extends IBaseService<RecordQuizEntity, Long> 
   Map<Long, List<Long>> getAllRecordsBySettingIds(List<Long> settingIds, String username);
   Map<Long, Date> getLatestFinishedTimeBySettingIds(List<Long> settingIds, String username);
   List<RecordQuizEntity> getRecordsByDateRange(String username, Date from, Date to);
+  void deleteBySettingIds(List<Long> settingIds);
 }

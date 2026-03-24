@@ -39,6 +39,13 @@ public class RecordQuizServiceImpl extends AbstractBaseServiceImpl<RecordQuizEnt
   }
 
   @Override
+  @javax.transaction.Transactional
+  public void deleteBySettingIds(List<Long> settingIds) {
+    if (settingIds == null || settingIds.isEmpty()) return;
+    recordQuizRepository.deleteAllByRecordQuizSettingIdIn(settingIds);
+  }
+
+  @Override
   public Map<Long, Date> getLatestFinishedTimeBySettingIds(List<Long> settingIds, String username) {
     return this.recordQuizRepository.findAllByUsernameAndRecordQuizSettingIdIn(username, settingIds).stream()
         .filter(aRecord -> aRecord.getFinishedTime() != null)

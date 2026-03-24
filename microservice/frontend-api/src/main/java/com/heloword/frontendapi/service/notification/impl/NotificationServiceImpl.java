@@ -22,17 +22,19 @@ import lombok.AllArgsConstructor;
 public class NotificationServiceImpl implements NotificationService {
 
   /**
-   * Ebbinghaus-inspired spaced repetition intervals indexed by correct-review count.
-   * correctCount 0 or 1 → review again tomorrow; 2 → 3 days; 3 → 7 days; etc.
+   * Ebbinghaus forgetting curve — group-based spaced repetition intervals.
+   * Matches the frontend DEFAULT_INTERVALS_MS in ebbinghaus.ts.
+   * Review 1: 20 min, Review 2: 1 h, Review 3: 8 h,
+   * Review 4: 1 day, Review 5: 2 days, Review 6: 6 days, Review 7: 31 days.
    */
   private static final long[] INTERVAL_MS = {
-      TimeUnit.DAYS.toMillis(1),   // 0 correct reviews
-      TimeUnit.DAYS.toMillis(1),   // 1 correct review
-      TimeUnit.DAYS.toMillis(3),   // 2 correct reviews
-      TimeUnit.DAYS.toMillis(7),   // 3 correct reviews
-      TimeUnit.DAYS.toMillis(14),  // 4 correct reviews
-      TimeUnit.DAYS.toMillis(30),  // 5 correct reviews
-      TimeUnit.DAYS.toMillis(90),  // 6+ correct reviews
+      TimeUnit.MINUTES.toMillis(20),  // review 1 — 20 minutes
+      TimeUnit.HOURS.toMillis(1),     // review 2 — 1 hour
+      TimeUnit.HOURS.toMillis(8),     // review 3 — 8 hours
+      TimeUnit.DAYS.toMillis(1),      // review 4 — 1 day
+      TimeUnit.DAYS.toMillis(2),      // review 5 — 2 days
+      TimeUnit.DAYS.toMillis(6),      // review 6 — 6 days
+      TimeUnit.DAYS.toMillis(31),     // review 7 — 31 days
   };
 
   private ServiceRecordClient serviceRecordClient;

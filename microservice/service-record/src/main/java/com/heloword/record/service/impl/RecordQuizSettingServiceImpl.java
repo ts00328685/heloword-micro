@@ -24,4 +24,10 @@ public class RecordQuizSettingServiceImpl extends AbstractBaseServiceImpl<Record
     return recordQuizSettingRepository.getQuizSettingFinishedCount(username);
   }
 
+  @Override
+  public void deleteBatch(List<Long> ids) {
+    if (ids == null || ids.isEmpty()) return;
+    recordQuizSettingRepository.deleteAllByIdIn(ids);
+  }
+
 }
