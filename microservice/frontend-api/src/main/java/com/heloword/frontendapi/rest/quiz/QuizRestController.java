@@ -6,11 +6,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import com.heloword.common.model.dto.RecordQuizDto;
 import com.heloword.common.model.dto.RecordQuizSettingDto;
+import com.heloword.frontendapi.model.request.DeleteGroupRequest;
+import com.heloword.frontendapi.model.request.GroupOverrideRequest;
 import com.heloword.frontendapi.service.quiz.QuizService;
 
 import lombok.AllArgsConstructor;
@@ -50,5 +53,31 @@ public class QuizRestController extends AbstractBaseFrontendRestController {
   @PostMapping("/get-record-ids-by-setting-ids")
   public HeloResponse<?> getRecordIdsBySettingIds(@RequestBody List<Long> settingIds) {
     return HeloResponse.successWithData(quizService.getRecordIdsBySettingIds(getUser().get(), settingIds));
+  }
+
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/delete-group")
+  public HeloResponse<?> deleteGroup(@RequestBody DeleteGroupRequest request) {
+    quizService.deleteGroup(getUser().get(), request.getType(), request.getMin(), request.getMax());
+    return HeloResponse.successWithoutData();
+  }
+
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/get-group-overrides")
+  public HeloResponse<?> getGroupOverrides() {
+    return HeloResponse.successWithData(quizService.getGroupOverrides(getUser().get()));
+  }
+
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/save-group-override")
+  public HeloResponse<?> saveGroupOverride(@RequestBody GroupOverrideRequest request) {
+    return HeloResponse.successWithData(quizService.saveGroupOverride(getUser().get(), request));
+  }
+
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/delete-group-override")
+  public HeloResponse<?> deleteGroupOverride(@RequestParam String groupKey) {
+    quizService.deleteGroupOverride(getUser().get(), groupKey);
+    return HeloResponse.successWithoutData();
   }
 }

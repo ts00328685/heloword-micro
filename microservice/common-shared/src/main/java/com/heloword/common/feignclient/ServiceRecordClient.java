@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.entity.record.RecordQuizEntity;
+import com.heloword.common.entity.record.RecordQuizGroupOverrideEntity;
 import com.heloword.common.entity.record.RecordQuizSettingEntity;
 import com.heloword.common.entity.social.FriendEntity;
 import com.heloword.common.filter.FeignClientInterceptor;
@@ -43,6 +44,23 @@ public interface ServiceRecordClient {
 
   @GetMapping("/api/record-quiz/get-by-date-range")
   HeloResponse<List<RecordQuizEntity>> getRecordsByDateRange(@RequestHeader String username, @RequestParam long from, @RequestParam long to);
+
+  @PostMapping("/api/record-quiz-setting/delete-batch")
+  HeloResponse<?> deleteSettingsByIds(@RequestBody List<Long> ids);
+
+  @PostMapping("/api/record-quiz/delete-by-setting-ids")
+  HeloResponse<?> deleteRecordsBySettingIds(@RequestBody List<Long> settingIds);
+
+  // ── Group overrides ──────────────────────────────────────────────────────
+
+  @GetMapping("/api/record-quiz-group-override/by-username")
+  HeloResponse<List<RecordQuizGroupOverrideEntity>> getGroupOverrides(@RequestHeader String username);
+
+  @PostMapping("/api/record-quiz-group-override/save")
+  HeloResponse<RecordQuizGroupOverrideEntity> saveGroupOverride(@RequestHeader String username, @RequestBody RecordQuizGroupOverrideEntity entity);
+
+  @DeleteMapping("/api/record-quiz-group-override/by-key")
+  HeloResponse<?> deleteGroupOverride(@RequestHeader String username, @RequestParam String groupKey);
 
   // ── Social: Friends ──────────────────────────────────────────────────────
 
