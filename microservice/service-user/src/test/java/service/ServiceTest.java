@@ -24,11 +24,6 @@ public class ServiceTest {
   @Test
   void testMember() {
 
-    MemberEntity member = memberService.findById(1L).orElse(null);
-    Gson gson = new Gson();
-    redisTemplate.opsForValue().set(member.getEmail(), gson.toJson(member));
-    MemberEntity memberEntity = gson.fromJson(redisTemplate.opsForValue().get(member.getEmail()), MemberEntity.class);
-    log.info("### deserialized: {} ", memberEntity);
   }
 
 }

@@ -6,11 +6,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import com.heloword.common.exception.HeloServiceException;
 import com.heloword.common.feignclient.ServiceWordClient;
 import com.heloword.common.model.dto.UserDto;
 import com.heloword.common.type.ResponseCode;
+import com.heloword.frontendapi.config.CacheConfig;
 import com.heloword.frontendapi.model.response.DashboardResponse;
 import com.heloword.frontendapi.service.home.DashboardService;
 
@@ -31,25 +33,21 @@ public class DashboardServiceImpl implements DashboardService {
   }
 
   @Override
+  @Cacheable(value = CacheConfig.DASHBOARD_CACHE, key = "'all'")
   public DashboardResponse getDashboardResponse(Optional<UserDto> userDto) {
-      ExecutorService executorService = Executors.newFixedThreadPool(6);
-      DashboardResponse dashboardResponse = new DashboardResponse();
-      try {
-        executorService.invokeAll(Arrays.asList(
-            fromRunnable(() -> dashboardResponse.setWordEnglishList(serviceWordClient.getAllEnWords().getData())),
-//            fromRunnable(() -> dashboardResponse.setWordGermanList(serviceWordClient.getAllGeWords().getData())),
-            fromRunnable(() -> dashboardResponse.setWordJapaneseList(serviceWordClient.getAllJpWords().getData())),
-//            fromRunnable(() -> dashboardResponse.setSentenceEnglishList(serviceWordClient.getAllEnSentences().getData())),
-//            fromRunnable(() -> dashboardResponse.setSentenceGermanList(serviceWordClient.getAllGeSentences().getData())),
-            fromRunnable(() -> dashboardResponse.setSentenceJapaneseList(serviceWordClient.getAllJpSentences().getData()))
-        ));
-      } catch (Exception e) {
-        log.error(e);
-        throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
-      } finally {
-        executorService.shutdown();
-      }
+    ExecutorService executorService = Executors.newFixedThreadPool(6);
+    DashboardResponse dashboardResponse = new DashboardResponse();
+    try {
+      executorService.invokeAll(Arrays.asList(
+          fromRunnable(() -> dashboardResponse.setWordEnglishList(serviceWordClient.getAllEnWords().getData())),
+          fromRunnable(() -> dashboardResponse.setWordJapaneseList(serviceWordClient.getAllJpWords().getData()))
+      ));
+    } catch (Exception e) {
+      log.error(e);
+      throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
+    } finally {
       executorService.shutdown();
-      return dashboardResponse;
+    }
+    return dashboardResponse;
   }
 }
