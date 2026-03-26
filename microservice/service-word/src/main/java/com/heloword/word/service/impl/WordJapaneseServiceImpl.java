@@ -1,5 +1,6 @@
 package com.heloword.word.service.impl;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.heloword.common.base.service.AbstractBaseServiceImpl;
@@ -16,6 +17,11 @@ public class WordJapaneseServiceImpl extends AbstractBaseServiceImpl<WordJapanes
   @Override
   protected WordJapaneseRepository getRepo() {
     return this.wordJapaneseRepository;
+  }
+
+  @Override
+  public List<WordJapaneseEntity> findAllVerbs() {
+    return wordJapaneseRepository.findAllByInfoContaining("动");
   }
 
 }

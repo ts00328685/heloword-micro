@@ -22,6 +22,7 @@ public class DashboardResponse {
   private List<WordEnglishEntity> wordEnglishList;
   private List<WordGermanEntity> wordGermanList;
   private List<WordJapaneseEntity> wordJapaneseList;
+  private List<WordJapaneseEntity> wordJapaneseVerbList;
   private List<SentenceEnglishEntity> sentenceEnglishList;
   private List<SentenceJapaneseEntity> sentenceJapaneseList;
   private List<SentenceGermanEntity> sentenceGermanList;

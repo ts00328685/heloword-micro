@@ -19,6 +19,8 @@ public interface ServiceWordClient {
   HeloResponse<List<WordEnglishEntity>> getAllEnWords();
   @GetMapping("/api/word-japanese")
   HeloResponse<List<WordJapaneseEntity>> getAllJpWords();
+  @GetMapping("/api/word-japanese/verbs")
+  HeloResponse<List<WordJapaneseEntity>> getAllJpVerbWords();
   @GetMapping("/api/word-german")
   HeloResponse<List<WordGermanEntity>> getAllGeWords();
 
