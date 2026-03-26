@@ -25,6 +25,11 @@ public class WordJapaneseRestController extends AbstractBaseRestController<WordJ
 		return wordJapaneseService;
 	}
 
+	@GetMapping("/verbs")
+	public HeloResponse<?> findAllVerbs() {
+		return success(wordJapaneseService.findAllVerbs());
+	}
+
 	@GetMapping("/example/{word}")
 	public HeloResponse<?> findAllByExample(@PathVariable String word) {
 		WordJapaneseEntity condition = WordJapaneseEntity.builder().word(word).translateEn(word).translateCh(word).build();
