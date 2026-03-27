@@ -36,4 +36,6 @@ public interface SocialFrontendService {
   void markRoomRead(String recipientUserId, String roomId);
 
   Map<String, Long> getUnreadCounts(String recipientUserId);
+
+  List<ChatMessageDto> getChatRooms(String userId);
 }

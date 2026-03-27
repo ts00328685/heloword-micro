@@ -200,6 +200,16 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
     }
   }
 
+  @Override
+  public List<ChatMessageDto> getChatRooms(String userId) {
+    try {
+      return serviceRecordClient.getChatRooms(userId).getData();
+    } catch (Exception e) {
+      log.error("getChatRooms feign call failed — userId={}: {}", userId, e.getMessage(), e);
+      throw e;
+    }
+  }
+
   /** Decode percent-encoded usernames from legacy records (e.g. '%40' → '@'). */
   private static String decodeUsername(String value) {
     if (value == null) return null;

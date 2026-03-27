@@ -31,4 +31,6 @@ public interface SocialService {
   void markRoomRead(String recipientUserId, String roomId);
 
   Map<String, Long> getUnreadCounts(String recipientUserId);
+
+  List<ChatMessageEntity> getChatRooms(String userId);
 }

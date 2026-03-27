@@ -73,6 +73,11 @@ public class SocialRestController extends AbstractBaseFrontendRestController {
     return HeloResponse.successWithData(socialFrontendService.getUnreadCounts(recipientUserId));
   }
 
+  @GetMapping("/messages/rooms")
+  public HeloResponse<?> getChatRooms(@RequestParam String userId) {
+    return HeloResponse.successWithData(socialFrontendService.getChatRooms(userId));
+  }
+
   // ── Friends (MEMBER only) ─────────────────────────────────────────────────
 
   @PreAuthorize("hasAnyAuthority('MEMBER')")
