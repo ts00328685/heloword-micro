@@ -34,13 +34,17 @@ import com.heloword.frontendapi.service.challenge.ChallengeService;
 @Service
 public class ChallengeServiceImpl implements ChallengeService {
 
-  private static final String SYSTEM_ROOM_ID = "system";
   private static final int QUESTION_TIMEOUT_SECONDS = 10;
   private static final int NEXT_QUESTION_DELAY_SECONDS = 3;
   private static final int SYSTEM_RESTART_DELAY_SECONDS = 10;
   private static final int MAX_POOL_SIZE = 200;
-  private static final int SYSTEM_WORD_MIN_ID = 3000;
-  private static final int SYSTEM_WORD_MAX_ID = 6421;
+
+  private static final String[][] SYSTEM_ROOMS = {
+    // { id, name, gameType, minId, maxId }
+    { "system-easy",         "English Words — Easy (1–2,000)",           "wordEnglishList", "1",    "2000"  },
+    { "system-medium",       "English Words — Medium (2,001–4,000)",      "wordEnglishList", "2001", "4000"  },
+    { "system-intermediate", "English Words — Intermediate (4,001–6,421)","wordEnglishList", "4001", "6421"  },
+  };
 
   @Autowired
   private ServiceWordClient serviceWordClient;
@@ -54,19 +58,20 @@ public class ChallengeServiceImpl implements ChallengeService {
 
   @PostConstruct
   public void init() {
-    ChallengeRoomState systemRoom = ChallengeRoomState.builder()
-        .id(SYSTEM_ROOM_ID)
-        .name("System Room — English Words")
-        .hostUserId(SYSTEM_ROOM_ID)
-        .gameType("wordEnglishList")
-        .status("WAITING")
-        .system(true)
-        .totalRounds(10)
-        .wordMinId(SYSTEM_WORD_MIN_ID)
-        .wordMaxId(SYSTEM_WORD_MAX_ID)
-        .build();
-    rooms.put(SYSTEM_ROOM_ID, systemRoom);
-    log.info("Challenge system room initialized");
+    for (String[] cfg : SYSTEM_ROOMS) {
+      String id       = cfg[0];
+      String name     = cfg[1];
+      String gameType = cfg[2];
+      int    minId    = Integer.parseInt(cfg[3]);
+      int    maxId    = Integer.parseInt(cfg[4]);
+      ChallengeRoomState room = ChallengeRoomState.builder()
+          .id(id).name(name).hostUserId(id)
+          .gameType(gameType).status("WAITING").system(true)
+          .totalRounds(10).wordMinId(minId).wordMaxId(maxId)
+          .build();
+      rooms.put(id, room);
+    }
+    log.info("Challenge system rooms initialized ({} rooms)", SYSTEM_ROOMS.length);
   }
 
   @PreDestroy
@@ -111,7 +116,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         .type("ROOM_UPDATE").room(toDto(room)).build());
     // Auto-start system room when first real player joins and room is WAITING
     if (room.isSystem() && "WAITING".equals(room.getStatus()) && room.getPlayers().size() >= 1) {
-      scheduler.schedule(() -> startGame(roomId, SYSTEM_ROOM_ID), 3, TimeUnit.SECONDS);
+      scheduler.schedule(() -> startGame(roomId, roomId), 3, TimeUnit.SECONDS);
     }
     return toDto(room);
   }
@@ -275,7 +280,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     if (room.isSystem()) {
       room.setQuestionTimer(scheduler.schedule(() -> {
         if (!room.getPlayers().isEmpty()) {
-          startGame(room.getId(), SYSTEM_ROOM_ID);
+          startGame(room.getId(), room.getId());
         } else {
           room.setStatus("WAITING");
           broadcastRoomList();

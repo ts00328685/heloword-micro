@@ -100,6 +100,15 @@ public class SocialRestController {
     return HeloResponse.successWithData(socialService.getUnreadCounts(decodeHeader(recipientUserId)));
   }
 
+  @GetMapping("/messages/rooms")
+  public HeloResponse<?> getChatRooms(@RequestHeader String userId) {
+    return HeloResponse.successWithData(
+        socialService.getChatRooms(decodeHeader(userId)).stream()
+            .map(ChatMessageDto::fromEntity)
+            .collect(Collectors.toList())
+    );
+  }
+
   // ── helpers ───────────────────────────────────────────────────────────────
 
   /**

@@ -4,6 +4,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -170,5 +172,21 @@ public class SocialServiceImpl implements SocialService {
   public Map<String, Long> getUnreadCounts(String recipientUserId) {
     return chatMessageRepository.findAllByRecipientUserIdAndReadAtIsNull(recipientUserId).stream()
         .collect(Collectors.groupingBy(ChatMessageEntity::getSenderUserId, Collectors.counting()));
+  }
+
+  @Override
+  public List<ChatMessageEntity> getChatRooms(String userId) {
+    // Returns the latest message per room for the given user, sorted by most recent first.
+    // findAllByUserId returns all messages DESC by sentAt, so the first entry per roomId is the latest.
+    return chatMessageRepository.findAllByUserId(userId).stream()
+        .collect(Collectors.toMap(
+            ChatMessageEntity::getRoomId,
+            m -> m,
+            (existing, newer) -> existing,  // keep first = latest (DESC order)
+            LinkedHashMap::new
+        ))
+        .values().stream()
+        .sorted(Comparator.comparing(ChatMessageEntity::getSentAt).reversed())
+        .collect(Collectors.toList());
   }
 }

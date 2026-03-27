@@ -96,4 +96,7 @@ public interface ServiceRecordClient {
   @GetMapping("/api/social/messages/unread")
   HeloResponse<Map<String, Long>> getUnreadCounts(@RequestHeader String recipientUserId);
 
+  @GetMapping("/api/social/messages/rooms")
+  HeloResponse<List<ChatMessageDto>> getChatRooms(@RequestHeader String userId);
+
 }

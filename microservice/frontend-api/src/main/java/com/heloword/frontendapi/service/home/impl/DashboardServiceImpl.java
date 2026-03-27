@@ -1,8 +1,8 @@
 package com.heloword.frontendapi.service.home.impl;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,30 +25,28 @@ public class DashboardServiceImpl implements DashboardService {
   @Autowired
   private ServiceWordClient serviceWordClient;
 
-  private Callable<Integer> fromRunnable(Runnable runnable) {
-    return () -> {
-      runnable.run();
-      return 1;
-    };
-  }
-
   @Override
-  @Cacheable(value = CacheConfig.DASHBOARD_CACHE, key = "'all'")
+  // unless guard: do not cache if the primary word list is empty/null (feign failure)
+  @Cacheable(value = CacheConfig.DASHBOARD_CACHE, key = "'all'",
+      unless = "#result == null || #result.wordEnglishList == null || #result.wordEnglishList.isEmpty()")
   public DashboardResponse getDashboardResponse(Optional<UserDto> userDto) {
-    ExecutorService executorService = Executors.newFixedThreadPool(6);
-    DashboardResponse dashboardResponse = new DashboardResponse();
+    ExecutorService pool = Executors.newFixedThreadPool(3);
     try {
-      executorService.invokeAll(Arrays.asList(
-          fromRunnable(() -> dashboardResponse.setWordEnglishList(serviceWordClient.getAllEnWords().getData())),
-          fromRunnable(() -> dashboardResponse.setWordJapaneseList(serviceWordClient.getAllJpWords().getData())),
-          fromRunnable(() -> dashboardResponse.setWordJapaneseVerbList(serviceWordClient.getAllJpVerbWords().getData()))
-      ));
+      // Use CompletableFuture so exceptions from feign calls propagate instead of being swallowed
+      CompletableFuture<List> enFuture  = CompletableFuture.supplyAsync(() -> serviceWordClient.getAllEnWords().getData(), pool);
+      CompletableFuture<List> jpFuture  = CompletableFuture.supplyAsync(() -> serviceWordClient.getAllJpWords().getData(), pool);
+      CompletableFuture<List> jpvFuture = CompletableFuture.supplyAsync(() -> serviceWordClient.getAllJpVerbWords().getData(), pool);
+
+      return DashboardResponse.builder()
+          .wordEnglishList(enFuture.get())
+          .wordJapaneseList(jpFuture.get())
+          .wordJapaneseVerbList(jpvFuture.get())
+          .build();
     } catch (Exception e) {
-      log.error(e);
+      log.error("Failed to load dashboard word lists: {}", e.getMessage(), e);
       throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
     } finally {
-      executorService.shutdown();
+      pool.shutdown();
     }
-    return dashboardResponse;
   }
 }
