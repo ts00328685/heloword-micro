@@ -98,6 +98,8 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
       String addresseeUsername = decodeUsername(f.getAddresseeUsername());
 
       boolean iAmRequester = user.getUsername().equals(requesterUsername);
+      log.debug("getFriends — caller={} requester={} addressee={} iAmRequester={}",
+          user.getUsername(), requesterUsername, addresseeUsername, iAmRequester);
       String otherUserId = iAmRequester ? addresseeUsername : requesterUsername;
       String myNickname = iAmRequester ? f.getRequesterNickname() : f.getAddresseeNickname();
 
@@ -124,6 +126,8 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
   @Override
   public FriendDto sendFriendRequest(UserDto user, String addresseeUsername) {
     try {
+      log.info("sendFriendRequest — requester={} addressee=[{}] len={}",
+          user.getUsername(), addresseeUsername, addresseeUsername == null ? -1 : addresseeUsername.length());
       FriendDto saved = serviceRecordClient.sendFriendRequest(user.getUsername(), addresseeUsername).getData();
       socialPushService.sendFriendRequestToUser(addresseeUsername, user.getUsername());
       return saved;
@@ -136,7 +140,14 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   @Override
   public void acceptFriendRequest(UserDto user, Long id) {
-    serviceRecordClient.acceptFriendRequest(user.getUsername(), id);
+    var result = serviceRecordClient.acceptFriendRequest(user.getUsername(), id);
+    // Notify the original requester so their friends list refreshes automatically
+    // and they see the ACCEPTED state without needing to reload the page.
+    var accepted = result.getData();
+    if (accepted != null && accepted.getRequesterUsername() != null) {
+      String requester = decodeUsername(accepted.getRequesterUsername());
+      socialPushService.sendFriendRequestToUser(requester, user.getUsername());
+    }
   }
 
   @Override

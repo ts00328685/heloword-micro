@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import com.heloword.common.model.dto.ChatMessageDto;
 import com.heloword.common.model.dto.FriendDto;
 import com.heloword.record.service.SocialService;
 
+@Log4j2
 @RestController
 @RequestMapping("/social")
 public class SocialRestController {
@@ -42,14 +44,15 @@ public class SocialRestController {
 
   @PostMapping("/friends/request")
   public HeloResponse<?> sendFriendRequest(@RequestHeader String username, @RequestBody String addresseeUsername) {
+    log.info("sendFriendRequest — raw-username=[{}] raw-addressee=[{}]", username, addresseeUsername);
     FriendEntity saved = socialService.sendFriendRequest(decodeHeader(username), addresseeUsername);
     return HeloResponse.successWithData(toFriendDto(saved));
   }
 
   @PostMapping("/friends/accept/{id}")
   public HeloResponse<?> acceptFriendRequest(@RequestHeader String username, @PathVariable Long id) {
-    socialService.acceptFriendRequest(decodeHeader(username), id);
-    return HeloResponse.successWithoutData();
+    FriendEntity accepted = socialService.acceptFriendRequest(decodeHeader(username), id);
+    return HeloResponse.successWithData(toFriendDto(accepted));
   }
 
   @PostMapping("/friends/reject/{id}")

@@ -71,7 +71,7 @@ public interface ServiceRecordClient {
   HeloResponse<FriendDto> sendFriendRequest(@RequestHeader String username, @RequestBody String addresseeUsername);
 
   @PostMapping("/api/social/friends/accept/{id}")
-  HeloResponse<?> acceptFriendRequest(@RequestHeader String username, @PathVariable Long id);
+  HeloResponse<FriendDto> acceptFriendRequest(@RequestHeader String username, @PathVariable Long id);
 
   @PostMapping("/api/social/friends/reject/{id}")
   HeloResponse<?> rejectFriendRequest(@RequestHeader String username, @PathVariable Long id);
