@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.model.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,5 +17,6 @@ public class FriendResponseDto {
   /** PENDING_SENT / PENDING_RECEIVED / ACCEPTED */
   private String status;
   /** Whether this friend is currently online */
+  @JsonProperty("isOnline")
   private boolean isOnline;
 }

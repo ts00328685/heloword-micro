@@ -3,11 +3,12 @@ package com.heloword.record.service.impl;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Date;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,19 +46,27 @@ public class SocialServiceImpl implements SocialService {
 
   @Override
   public FriendEntity sendFriendRequest(String requesterUsername, String addresseeUsername) {
-    // Check if friendship already exists in either direction (also check encoded forms for legacy records)
     String encodedRequester = encodeUsername(requesterUsername);
     String encodedAddressee = encodeUsername(addresseeUsername);
-    if (friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, addresseeUsername).isPresent()
-        || friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedRequester, addresseeUsername).isPresent()
-        || friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, encodedAddressee).isPresent()) {
-      throw new IllegalStateException("Friend request already exists");
+
+    // If a request was already sent in this direction, return it idempotently
+    // (handles duplicate clicks or retries gracefully).
+    Optional<FriendEntity> existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, addresseeUsername);
+    if (!existing.isPresent()) {
+      existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedRequester, addresseeUsername);
     }
+    if (!existing.isPresent()) {
+      existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, encodedAddressee);
+    }
+    if (existing.isPresent()) return existing.get();
+
+    // Check the reverse direction — if they already sent a request to me, reject.
     if (friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, requesterUsername).isPresent()
         || friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedAddressee, requesterUsername).isPresent()
         || friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, encodedRequester).isPresent()) {
-      throw new IllegalStateException("Friend request already exists");
+      throw new IllegalStateException("A friend request from that user is already pending");
     }
+
     FriendEntity entity = FriendEntity.builder()
         .requesterUsername(requesterUsername)
         .addresseeUsername(addresseeUsername)

@@ -1,6 +1,7 @@
 package com.heloword.frontendapi.rest.user;
 
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +13,7 @@ import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import com.heloword.common.entity.user.MemberEntity;
 import com.heloword.common.feignclient.ServiceUserClient;
+import com.heloword.common.util.Util;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -33,7 +35,7 @@ public class UserRestController extends AbstractBaseFrontendRestController {
 
   @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PutMapping("/nickname")
-  public HeloResponse<?> updateNickname(@RequestBody Map<String, String> body) {
+  public HeloResponse<?> updateNickname(@RequestBody Map<String, String> body, HttpServletRequest request) {
     String nickname = body.getOrDefault("nickname", "").trim();
     if (StringUtils.isBlank(nickname)) return fail("Nickname must not be blank");
     var user = getUser().orElseThrow();
@@ -41,6 +43,13 @@ public class UserRestController extends AbstractBaseFrontendRestController {
     if (member == null) return fail("User not found");
     member.setNickname(nickname);
     serviceUserClient.createOrUpdatMember(member);
+    // Refresh the Redis session so the new nickname survives page reloads.
+    // Without this the filter re-reads the old MemberEntity from Redis on the
+    // next request and getLoggedInUser() returns the pre-change nickname.
+    String idToken = Util.getIdTokenFromRequest(request);
+    if (StringUtils.isNotEmpty(idToken)) {
+      userSessionUtil.saveUserToSessionByKey(idToken, member);
+    }
     user.setNickname(nickname);
     return success(Map.of("user", user));
   }
