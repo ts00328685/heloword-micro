@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
@@ -40,10 +41,13 @@ public class ChallengeServiceImpl implements ChallengeService {
   private static final int MAX_POOL_SIZE = 200;
 
   private static final String[][] SYSTEM_ROOMS = {
-    // { id, name, gameType, minId, maxId }
-    { "system-easy",         "English Words — Easy (1–2,000)",           "wordEnglishList", "1",    "2000"  },
-    { "system-medium",       "English Words — Medium (2,001–4,000)",      "wordEnglishList", "2001", "4000"  },
-    { "system-intermediate", "English Words — Intermediate (4,001–6,421)","wordEnglishList", "4001", "6421"  },
+    // { id, name, gameType, minId, maxId, gameFormat }
+    { "system-easy",         "English Words — Easy (1–2,000)",            "wordEnglishList", "1",    "2000", "TYPING"       },
+    { "system-medium",       "English Words — Medium (2,001–4,000)",       "wordEnglishList", "2001", "4000", "TYPING"       },
+    { "system-intermediate", "English Words — Intermediate (4,001–6,421)", "wordEnglishList", "4001", "6421", "TYPING"       },
+    { "system-mc-easy",         "Multi-Choice — Easy (1–2,000)",            "wordEnglishList", "1",    "2000", "MULTI_CHOICE" },
+    { "system-mc-medium",       "Multi-Choice — Medium (2,001–4,000)",       "wordEnglishList", "2001", "4000", "MULTI_CHOICE" },
+    { "system-mc-intermediate", "Multi-Choice — Intermediate (4,001–6,421)", "wordEnglishList", "4001", "6421", "MULTI_CHOICE" },
   };
 
   @Autowired
@@ -59,14 +63,16 @@ public class ChallengeServiceImpl implements ChallengeService {
   @PostConstruct
   public void init() {
     for (String[] cfg : SYSTEM_ROOMS) {
-      String id       = cfg[0];
-      String name     = cfg[1];
-      String gameType = cfg[2];
-      int    minId    = Integer.parseInt(cfg[3]);
-      int    maxId    = Integer.parseInt(cfg[4]);
+      String id         = cfg[0];
+      String name       = cfg[1];
+      String gameType   = cfg[2];
+      int    minId      = Integer.parseInt(cfg[3]);
+      int    maxId      = Integer.parseInt(cfg[4]);
+      String gameFormat = cfg.length > 5 ? cfg[5] : "TYPING";
       ChallengeRoomState room = ChallengeRoomState.builder()
           .id(id).name(name).hostUserId(id)
-          .gameType(gameType).status("WAITING").system(true)
+          .gameType(gameType).gameFormat(gameFormat)
+          .status("WAITING").system(true)
           .totalRounds(10).wordMinId(minId).wordMaxId(maxId)
           .build();
       rooms.put(id, room);
@@ -176,12 +182,18 @@ public class ChallengeServiceImpl implements ChallengeService {
         ChallengePlayerState.builder().userId(uid).displayName(answer.getDisplayName())
             .score(0).guest(answer.isGuest()).build());
 
+    // MULTI_CHOICE: each player gets exactly one attempt per question
+    boolean isMultiChoice = "MULTI_CHOICE".equals(room.getGameFormat());
+    if (isMultiChoice && !room.getCurrentQuestionAnsweredPlayers().add(answer.getUserId())) {
+      return; // already answered this question
+    }
+
     String normalized = answer.getAnswer().toLowerCase().trim();
 
     if (!normalized.equals(room.getCurrentCorrectAnswer())) {
       // Wrong answer — deduct 1 point (floor at -999) and notify room
       ChallengePlayerState player = room.getPlayers().get(answer.getUserId());
-      player.setScore(player.getScore() - 1);
+      player.setScore(Math.max(-999, player.getScore() - 1));
       pushService.broadcastRoomEvent(roomId, ChallengeEventDto.builder()
           .type("WRONG_ANSWER")
           .targetUserId(answer.getUserId())
@@ -233,10 +245,18 @@ public class ChallengeServiceImpl implements ChallengeService {
       return;
     }
     ChallengeQuestion q = room.getQuestions().get(round - 1);
+    boolean isMultiChoice = "MULTI_CHOICE".equals(room.getGameFormat());
+    String hint = isMultiChoice ? null : buildHint(q.getNormalizedAnswer());
+    List<String> choices = buildChoices(room, q);
+
     room.setCurrentRound(round);
     room.setCurrentQuestionId(q.getId());
     room.setCurrentCorrectAnswer(q.getNormalizedAnswer());
     room.setCurrentQuestion(q.getQuestion());
+    room.setCurrentHint(hint);
+    room.setCurrentChoices(choices);
+    room.setQuestionStartTime(System.currentTimeMillis());
+    room.getCurrentQuestionAnsweredPlayers().clear();
 
     pushService.broadcastRoomEvent(room.getId(), ChallengeEventDto.builder()
         .type("QUESTION")
@@ -245,11 +265,38 @@ public class ChallengeServiceImpl implements ChallengeService {
         .question(q.getQuestion())
         .questionId(q.getId())
         .timeoutSeconds(QUESTION_TIMEOUT_SECONDS)
-        .hint(buildHint(q.getNormalizedAnswer()))
+        .hint(hint)
+        .choices(choices)
         .build());
 
     // Schedule timeout
     room.setQuestionTimer(scheduler.schedule(() -> handleQuestionTimeout(room, q.getId()), QUESTION_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+  }
+
+  /** Builds a shuffled list of 4 choices (1 correct + 3 distractors) for MULTI_CHOICE rooms.
+   *  Returns null for TYPING rooms. */
+  private List<String> buildChoices(ChallengeRoomState room, ChallengeQuestion correct) {
+    if (!"MULTI_CHOICE".equals(room.getGameFormat())) return null;
+    List<ChallengeQuestion> pool = room.getQuestions();
+    if (pool == null || pool.size() < 4) return null;
+
+    // Pick 3 random distractors — different normalized answer from correct
+    List<String> candidates = pool.stream()
+        .filter(q -> !q.getNormalizedAnswer().equals(correct.getNormalizedAnswer()))
+        .map(ChallengeQuestion::getDisplayAnswer)
+        .distinct()
+        .collect(Collectors.toList());
+    Collections.shuffle(candidates);
+    List<String> distractors = candidates.stream().limit(3).collect(Collectors.toList());
+
+    if (distractors.size() < 3) return null;
+
+    List<String> choices = new ArrayList<>(Stream.concat(
+        Stream.of(correct.getDisplayAnswer()),
+        distractors.stream()
+    ).collect(Collectors.toList()));
+    Collections.shuffle(choices);
+    return choices;
   }
 
   private void handleQuestionTimeout(ChallengeRoomState room, String questionId) {
@@ -355,11 +402,25 @@ public class ChallengeServiceImpl implements ChallengeService {
             .score(p.getScore()).isGuest(p.isGuest()).build())
         .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore()))
         .collect(Collectors.toList());
-    return ChallengeRoomDto.builder()
+
+    ChallengeRoomDto.ChallengeRoomDtoBuilder builder = ChallengeRoomDto.builder()
         .id(room.getId()).name(room.getName()).hostUserId(room.getHostUserId())
-        .gameType(room.getGameType()).status(room.getStatus()).system(room.isSystem())
+        .gameType(room.getGameType()).gameFormat(room.getGameFormat())
+        .status(room.getStatus()).system(room.isSystem())
         .totalRounds(room.getTotalRounds()).currentRound(room.getCurrentRound())
-        .players(playerList).build();
+        .players(playerList);
+
+    // Include active-question snapshot for late joiners
+    if ("PLAYING".equals(room.getStatus()) && room.getCurrentQuestionId() != null) {
+      int elapsed = (int) ((System.currentTimeMillis() - room.getQuestionStartTime()) / 1000);
+      int remaining = Math.max(0, QUESTION_TIMEOUT_SECONDS - elapsed);
+      builder.currentQuestion(room.getCurrentQuestion())
+             .currentQuestionId(room.getCurrentQuestionId())
+             .currentHint(room.getCurrentHint())
+             .remainingSeconds(remaining)
+             .currentChoices(room.getCurrentChoices());
+    }
+    return builder.build();
   }
 
   /** Builds a hint string: first and last letter of each word visible, middle as underscores.
