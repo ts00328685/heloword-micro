@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.model.challenge;
 
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +28,9 @@ public class ChallengeEventDto {
   private String correctAnswer;
   private Integer pointsAwarded;  // points the winner earned (1–3 based on word length)
   private Map<String, Integer> scores;
+
+  /** Four answer choices sent with QUESTION events in MULTI_CHOICE rooms */
+  private List<String> choices;
 
   // WRONG_ANSWER fields
   private String targetUserId;  // the player who gave the wrong answer
