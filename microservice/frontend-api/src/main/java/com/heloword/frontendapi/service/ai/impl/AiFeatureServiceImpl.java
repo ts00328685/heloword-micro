@@ -3,11 +3,13 @@ package com.heloword.frontendapi.service.ai.impl;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.heloword.frontendapi.config.CacheConfig;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
@@ -23,6 +25,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
   private final RestTemplate restTemplate = new RestTemplate();
 
   @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "'insight:' + (#request.wordLang ?: 'en') + ':' + #request.word.toLowerCase()")
   public String wordInsight(WordInsightRequest request) {
     String wordLang = request.getWordLang() != null ? request.getWordLang() : "en";
     String langLabel = resolveWordLangLabel(wordLang);
@@ -42,6 +46,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
   }
 
   @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "'sample:' + (#request.wordLang ?: 'en') + ':' + #request.word.toLowerCase()")
   public String sampleSentence(SampleSentenceRequest request) {
     String wordLang = request.getWordLang() != null ? request.getWordLang() : "en";
     String langLabel = resolveWordLangLabel(wordLang);
@@ -57,6 +63,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
   }
 
   @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "'coach:' + (#request.lang ?: 'zh') + ':' + #request.accuracyPct + ':' + #request.wrongCount")
   public String studyCoach(StudyCoachRequest request) {
     String langLabel = resolveLangLabel(request.getLang());
     int pct = request.getAccuracyPct();
