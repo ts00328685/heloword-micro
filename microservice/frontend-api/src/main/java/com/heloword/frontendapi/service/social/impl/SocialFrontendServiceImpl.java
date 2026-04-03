@@ -11,7 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import com.heloword.common.exception.HeloServiceException;
 import com.heloword.common.feignclient.ServiceRecordClient;
+import com.heloword.common.type.ResponseCode;
 import com.heloword.common.model.dto.ChatMessageDto;
 import com.heloword.common.model.dto.FriendDto;
 import com.heloword.common.model.dto.UserDto;
@@ -141,10 +143,18 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
   @Override
   public void acceptFriendRequest(UserDto user, Long id) {
     var result = serviceRecordClient.acceptFriendRequest(user.getUsername(), id);
+    var accepted = result.getData();
+    if (accepted == null) {
+      // Service-record rejected the request (e.g. "Not authorized", "not found").
+      // Propagate as an error so the frontend receives a failure response instead
+      // of a false success that leaves the pending request stuck in the UI.
+      log.error("acceptFriendRequest failed — user={} id={} code={} msg={}",
+          user.getUsername(), id, result.getCode(), result.getMessage());
+      throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
+    }
     // Notify the original requester so their friends list refreshes automatically
     // and they see the ACCEPTED state without needing to reload the page.
-    var accepted = result.getData();
-    if (accepted != null && accepted.getRequesterUsername() != null) {
+    if (accepted.getRequesterUsername() != null) {
       String requester = decodeUsername(accepted.getRequesterUsername());
       socialPushService.sendFriendRequestToUser(requester, user.getUsername());
     }
@@ -152,7 +162,12 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   @Override
   public void rejectFriendRequest(UserDto user, Long id) {
-    serviceRecordClient.rejectFriendRequest(user.getUsername(), id);
+    var result = serviceRecordClient.rejectFriendRequest(user.getUsername(), id);
+    if (result == null || !ResponseCode.SUCCESS.getCode().equals(result.getCode())) {
+      log.error("rejectFriendRequest failed — user={} id={} code={} msg={}",
+          user.getUsername(), id, result != null ? result.getCode() : "null", result != null ? result.getMessage() : "null");
+      throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
+    }
   }
 
   @Override
@@ -221,11 +236,13 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
     }
   }
 
-  /** Decode percent-encoded usernames from legacy records (e.g. '%40' → '@'). */
+  /** Decode percent-encoded usernames from legacy records (e.g. '%40' → '@').
+   *  Also strips trailing '=' left by Feign's form-body encoding bug. */
   private static String decodeUsername(String value) {
     if (value == null) return null;
     try {
-      return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+      String decoded = URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+      return decoded.endsWith("=") ? decoded.substring(0, decoded.length() - 1) : decoded;
     } catch (Exception e) {
       return value;
     }

@@ -43,9 +43,9 @@ public class SocialRestController {
   }
 
   @PostMapping("/friends/request")
-  public HeloResponse<?> sendFriendRequest(@RequestHeader String username, @RequestBody String addresseeUsername) {
+  public HeloResponse<?> sendFriendRequest(@RequestHeader String username, @RequestHeader String addresseeUsername) {
     log.info("sendFriendRequest — raw-username=[{}] raw-addressee=[{}]", username, addresseeUsername);
-    FriendEntity saved = socialService.sendFriendRequest(decodeHeader(username), addresseeUsername);
+    FriendEntity saved = socialService.sendFriendRequest(decodeHeader(username), decodeHeader(addresseeUsername));
     return HeloResponse.successWithData(toFriendDto(saved));
   }
 

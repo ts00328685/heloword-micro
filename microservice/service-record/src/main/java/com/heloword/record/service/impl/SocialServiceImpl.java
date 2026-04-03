@@ -13,12 +13,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 import com.heloword.common.entity.social.ChatMessageEntity;
 import com.heloword.common.entity.social.FriendEntity;
 import com.heloword.common.repo.social.ChatMessageRepository;
 import com.heloword.common.repo.social.FriendRepository;
 import com.heloword.record.service.SocialService;
 
+@Slf4j
 @Service
 public class SocialServiceImpl implements SocialService {
 
@@ -34,11 +36,16 @@ public class SocialServiceImpl implements SocialService {
   public List<FriendEntity> getFriends(String username) {
     // Also search with URL-encoded form for legacy corrupted records (e.g. '%40' for '@')
     String encodedUsername = encodeUsername(username);
+    // Also search with trailing '=' suffix produced by the Feign body-encoding bug
+    String suffixed = username + "=";
+    String encodedSuffixed = encodedUsername + "=";
     return Stream.of(
         friendRepository.findAllByRequesterUsername(username),
         friendRepository.findAllByAddresseeUsername(username),
+        friendRepository.findAllByAddresseeUsername(suffixed),
         encodedUsername.equals(username) ? List.<FriendEntity>of() : friendRepository.findAllByRequesterUsername(encodedUsername),
-        encodedUsername.equals(username) ? List.<FriendEntity>of() : friendRepository.findAllByAddresseeUsername(encodedUsername)
+        encodedUsername.equals(username) ? List.<FriendEntity>of() : friendRepository.findAllByAddresseeUsername(encodedUsername),
+        encodedUsername.equals(username) ? List.<FriendEntity>of() : friendRepository.findAllByAddresseeUsername(encodedSuffixed)
     ).flatMap(List::stream)
      .distinct()
      .collect(Collectors.toList());
@@ -51,19 +58,20 @@ public class SocialServiceImpl implements SocialService {
 
     // If a request was already sent in this direction, return it idempotently
     // (handles duplicate clicks or retries gracefully).
+    // Also check suffixed variants left by the Feign body-encoding bug (addressee stored as "email=").
     Optional<FriendEntity> existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, addresseeUsername);
-    if (!existing.isPresent()) {
-      existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedRequester, addresseeUsername);
-    }
-    if (!existing.isPresent()) {
-      existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, encodedAddressee);
-    }
+    if (!existing.isPresent()) existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedRequester, addresseeUsername);
+    if (!existing.isPresent()) existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, encodedAddressee);
+    if (!existing.isPresent()) existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, addresseeUsername + "=");
+    if (!existing.isPresent()) existing = friendRepository.findByRequesterUsernameAndAddresseeUsername(requesterUsername, encodedAddressee + "=");
     if (existing.isPresent()) return existing.get();
 
     // Check the reverse direction — if they already sent a request to me, reject.
     if (friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, requesterUsername).isPresent()
         || friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedAddressee, requesterUsername).isPresent()
-        || friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, encodedRequester).isPresent()) {
+        || friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername, encodedRequester).isPresent()
+        || friendRepository.findByRequesterUsernameAndAddresseeUsername(addresseeUsername + "=", requesterUsername).isPresent()
+        || friendRepository.findByRequesterUsernameAndAddresseeUsername(encodedAddressee + "=", requesterUsername).isPresent()) {
       throw new IllegalStateException("A friend request from that user is already pending");
     }
 
@@ -78,9 +86,15 @@ public class SocialServiceImpl implements SocialService {
   @Override
   public FriendEntity acceptFriendRequest(String addresseeUsername, Long id) {
     FriendEntity entity = friendRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Friend request not found"));
+        .orElseThrow(() -> {
+          log.error("acceptFriendRequest — record not found: id={} addressee={}", id, addresseeUsername);
+          return new IllegalArgumentException("Friend request not found");
+        });
     // Decode stored value to handle legacy corrupted records
-    if (!decodeUsername(entity.getAddresseeUsername()).equals(addresseeUsername)) {
+    String storedAddressee = decodeUsername(entity.getAddresseeUsername());
+    if (!storedAddressee.equals(addresseeUsername)) {
+      log.error("acceptFriendRequest — not authorized: id={} stored=[{}] caller=[{}]",
+          id, storedAddressee, addresseeUsername);
       throw new IllegalStateException("Not authorized");
     }
     entity.setFriendStatus("ACCEPTED");
@@ -128,7 +142,9 @@ public class SocialServiceImpl implements SocialService {
   private static String decodeUsername(String value) {
     if (value == null) return null;
     try {
-      return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+      String decoded = URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+      // Strip trailing '=' left by Feign's form-body encoding bug (legacy corrupted rows)
+      return decoded.endsWith("=") ? decoded.substring(0, decoded.length() - 1) : decoded;
     } catch (Exception e) {
       return value;
     }
