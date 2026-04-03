@@ -14,7 +14,7 @@ public interface SocialService {
 
   FriendEntity sendFriendRequest(String requesterUsername, String addresseeUsername);
 
-  FriendEntity acceptFriendRequest(String addresseeUsername, Long id);
+  FriendEntity acceptFriendRequest(String addresseeUsername, Long id, String addresseeDisplayName);
 
   void rejectFriendRequest(String addresseeUsername, Long id);
 

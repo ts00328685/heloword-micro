@@ -71,7 +71,8 @@ public interface ServiceRecordClient {
   HeloResponse<FriendDto> sendFriendRequest(@RequestHeader String username, @RequestHeader String addresseeUsername);
 
   @PostMapping("/api/social/friends/accept/{id}")
-  HeloResponse<FriendDto> acceptFriendRequest(@RequestHeader String username, @PathVariable Long id);
+  HeloResponse<FriendDto> acceptFriendRequest(@RequestHeader String username, @PathVariable Long id,
+      @RequestHeader String addresseeDisplayName);
 
   @PostMapping("/api/social/friends/reject/{id}")
   HeloResponse<?> rejectFriendRequest(@RequestHeader String username, @PathVariable Long id);
@@ -80,7 +81,7 @@ public interface ServiceRecordClient {
   HeloResponse<?> removeFriend(@RequestHeader String username, @PathVariable Long id);
 
   @PutMapping("/api/social/friends/{id}/nickname")
-  HeloResponse<?> updateFriendNickname(@RequestHeader String username, @PathVariable Long id, @RequestBody String nickname);
+  HeloResponse<?> updateFriendNickname(@RequestHeader String username, @PathVariable Long id, @RequestHeader String nickname);
 
   // ── Social: Chat ─────────────────────────────────────────────────────────
 
