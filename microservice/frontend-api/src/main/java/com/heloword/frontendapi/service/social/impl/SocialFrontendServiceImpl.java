@@ -142,7 +142,13 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   @Override
   public void acceptFriendRequest(UserDto user, Long id) {
-    var result = serviceRecordClient.acceptFriendRequest(user.getUsername(), id);
+    // Addressee's own display name — stored as requesterNickname so the requester
+    // immediately sees a real name for the friend who just accepted them.
+    String addresseeDisplayName = user.getNickname() != null ? user.getNickname()
+        : user.getFullname() != null ? user.getFullname()
+        : user.getUsername();
+
+    var result = serviceRecordClient.acceptFriendRequest(user.getUsername(), id, addresseeDisplayName);
     var accepted = result.getData();
     if (accepted == null) {
       // Service-record rejected the request (e.g. "Not authorized", "not found").
@@ -152,6 +158,25 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
           user.getUsername(), id, result.getCode(), result.getMessage());
       throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
     }
+
+    // Also pre-fill addresseeNickname (what the accepting user sees for the requester)
+    // with the requester's live display name if they are currently online.
+    // Only do this if the column is still empty to avoid overwriting a custom nickname.
+    if (accepted.getAddresseeNickname() == null && accepted.getRequesterUsername() != null) {
+      String requesterUsername = decodeUsername(accepted.getRequesterUsername());
+      getOnlineUsers().stream()
+          .filter(u -> requesterUsername.equals(u.getUserId()))
+          .map(OnlineUserDto::getDisplayName)
+          .findFirst()
+          .ifPresent(displayName -> {
+            try {
+              serviceRecordClient.updateFriendNickname(user.getUsername(), id, displayName);
+            } catch (Exception e) {
+              log.warn("acceptFriendRequest — could not set default addresseeNickname for id={}: {}", id, e.getMessage());
+            }
+          });
+    }
+
     // Notify the original requester so their friends list refreshes automatically
     // and they see the ACCEPTED state without needing to reload the page.
     if (accepted.getRequesterUsername() != null) {

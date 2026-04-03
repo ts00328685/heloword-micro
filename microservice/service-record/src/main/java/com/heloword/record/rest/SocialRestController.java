@@ -50,8 +50,10 @@ public class SocialRestController {
   }
 
   @PostMapping("/friends/accept/{id}")
-  public HeloResponse<?> acceptFriendRequest(@RequestHeader String username, @PathVariable Long id) {
-    FriendEntity accepted = socialService.acceptFriendRequest(decodeHeader(username), id);
+  public HeloResponse<?> acceptFriendRequest(@RequestHeader String username, @PathVariable Long id,
+      @RequestHeader String addresseeDisplayName) {
+    FriendEntity accepted = socialService.acceptFriendRequest(
+        decodeHeader(username), id, decodeHeader(addresseeDisplayName));
     return HeloResponse.successWithData(toFriendDto(accepted));
   }
 
@@ -68,8 +70,8 @@ public class SocialRestController {
   }
 
   @PutMapping("/friends/{id}/nickname")
-  public HeloResponse<?> updateFriendNickname(@RequestHeader String username, @PathVariable Long id, @RequestBody String nickname) {
-    socialService.updateFriendNickname(decodeHeader(username), id, nickname);
+  public HeloResponse<?> updateFriendNickname(@RequestHeader String username, @PathVariable Long id, @RequestHeader String nickname) {
+    socialService.updateFriendNickname(decodeHeader(username), id, decodeHeader(nickname));
     return HeloResponse.successWithoutData();
   }
 

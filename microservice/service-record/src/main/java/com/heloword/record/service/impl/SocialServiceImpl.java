@@ -84,7 +84,7 @@ public class SocialServiceImpl implements SocialService {
   }
 
   @Override
-  public FriendEntity acceptFriendRequest(String addresseeUsername, Long id) {
+  public FriendEntity acceptFriendRequest(String addresseeUsername, Long id, String addresseeDisplayName) {
     FriendEntity entity = friendRepository.findById(id)
         .orElseThrow(() -> {
           log.error("acceptFriendRequest — record not found: id={} addressee={}", id, addresseeUsername);
@@ -101,6 +101,12 @@ public class SocialServiceImpl implements SocialService {
     // Self-heal: fix the stored username if it was corrupted
     entity.setAddresseeUsername(addresseeUsername);
     entity.setRequesterUsername(decodeUsername(entity.getRequesterUsername()));
+    // Pre-fill requesterNickname with the addressee's own display name so the requester
+    // immediately sees a real name for the friend they just got accepted by.
+    // Only set if the requester hasn't already chosen a custom nickname.
+    if (entity.getRequesterNickname() == null && addresseeDisplayName != null && !addresseeDisplayName.isBlank()) {
+      entity.setRequesterNickname(addresseeDisplayName);
+    }
     return friendRepository.save(entity);
   }
 
