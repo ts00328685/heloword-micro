@@ -20,6 +20,8 @@ import com.heloword.common.entity.social.FriendEntity;
 import com.heloword.common.filter.FeignClientInterceptor;
 import com.heloword.common.model.dto.ChatMessageDto;
 import com.heloword.common.model.dto.FriendDto;
+import com.heloword.common.model.dto.UserCustomGroupDto;
+import com.heloword.common.model.dto.UserCustomWordDto;
 
 @FeignClient(name = "SERVICE-RECORD", url = "${feign.service-record.url:}", configuration = FeignClientInterceptor.class)
 public interface ServiceRecordClient {
@@ -99,5 +101,31 @@ public interface ServiceRecordClient {
 
   @GetMapping("/api/social/messages/rooms")
   HeloResponse<List<ChatMessageDto>> getChatRooms(@RequestHeader String userId);
+
+  // ── User Custom Vocabulary ────────────────────────────────────────────────
+
+  @GetMapping("/api/custom-vocab/groups")
+  HeloResponse<List<UserCustomGroupDto>> getCustomGroups(@RequestHeader String username);
+
+  @PostMapping("/api/custom-vocab/groups")
+  HeloResponse<UserCustomGroupDto> createCustomGroup(@RequestHeader String username, @RequestBody UserCustomGroupDto dto);
+
+  @PutMapping("/api/custom-vocab/groups/{id}")
+  HeloResponse<UserCustomGroupDto> updateCustomGroup(@RequestHeader String username, @PathVariable Long id, @RequestBody UserCustomGroupDto dto);
+
+  @DeleteMapping("/api/custom-vocab/groups/{id}")
+  HeloResponse<?> deleteCustomGroup(@RequestHeader String username, @PathVariable Long id);
+
+  @GetMapping("/api/custom-vocab/groups/{id}/words")
+  HeloResponse<List<UserCustomWordDto>> getCustomWords(@RequestHeader String username, @PathVariable Long id);
+
+  @PostMapping("/api/custom-vocab/groups/{id}/words")
+  HeloResponse<UserCustomWordDto> addCustomWord(@RequestHeader String username, @PathVariable Long id, @RequestBody UserCustomWordDto dto);
+
+  @PutMapping("/api/custom-vocab/words/{wordId}")
+  HeloResponse<UserCustomWordDto> updateCustomWord(@RequestHeader String username, @PathVariable Long wordId, @RequestBody UserCustomWordDto dto);
+
+  @DeleteMapping("/api/custom-vocab/words/{wordId}")
+  HeloResponse<?> deleteCustomWord(@RequestHeader String username, @PathVariable Long wordId);
 
 }
