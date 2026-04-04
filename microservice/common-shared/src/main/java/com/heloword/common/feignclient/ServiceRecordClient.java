@@ -22,6 +22,7 @@ import com.heloword.common.model.dto.ChatMessageDto;
 import com.heloword.common.model.dto.FriendDto;
 import com.heloword.common.model.dto.UserCustomGroupDto;
 import com.heloword.common.model.dto.UserCustomWordDto;
+import com.heloword.common.model.dto.VocabShareRequestDto;
 
 @FeignClient(name = "SERVICE-RECORD", url = "${feign.service-record.url:}", configuration = FeignClientInterceptor.class)
 public interface ServiceRecordClient {
@@ -127,5 +128,19 @@ public interface ServiceRecordClient {
 
   @DeleteMapping("/api/custom-vocab/words/{wordId}")
   HeloResponse<?> deleteCustomWord(@RequestHeader String username, @PathVariable Long wordId);
+
+  // ── Vocab sharing ─────────────────────────────────────────────────────────
+
+  @PostMapping("/api/vocab-share")
+  HeloResponse<VocabShareRequestDto> sendVocabShare(@RequestHeader String username, @RequestBody VocabShareRequestDto dto);
+
+  @GetMapping("/api/vocab-share/inbox")
+  HeloResponse<List<VocabShareRequestDto>> getVocabShareInbox(@RequestHeader String username);
+
+  @PostMapping("/api/vocab-share/{id}/accept")
+  HeloResponse<VocabShareRequestDto> acceptVocabShare(@RequestHeader String username, @PathVariable Long id);
+
+  @PostMapping("/api/vocab-share/{id}/reject")
+  HeloResponse<?> rejectVocabShare(@RequestHeader String username, @PathVariable Long id);
 
 }
