@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import com.heloword.common.model.dto.ChatMessageDto;
+import com.heloword.common.model.dto.VocabShareRequestDto;
 import com.heloword.frontendapi.model.response.OnlineUserDto;
 
 @Log4j2
@@ -30,5 +31,11 @@ public class SocialPushService {
   public void sendFriendRequestToUser(String addresseeId, String requesterUsername) {
     messagingTemplate.convertAndSend("/topic/social/" + addresseeId + "/friend-requests", requesterUsername);
     log.debug("Pushed new-friend-request to /topic/social/{}/friend-requests", addresseeId);
+  }
+
+  /** Push an incoming vocab-share notification to the recipient's personal topic. */
+  public void sendVocabShareToUser(String recipientUserId, VocabShareRequestDto share) {
+    messagingTemplate.convertAndSend("/topic/social/" + recipientUserId + "/vocab-share", share);
+    log.debug("Pushed vocab-share to /topic/social/{}/vocab-share", recipientUserId);
   }
 }
