@@ -62,21 +62,26 @@ public class AuthServiceImpl implements AuthService {
     return Optional.of(memberCreatedOrUpdated.getData());
   }
 
+  private static String getClaimString(GoogleIdToken.Payload idToken, String claim) {
+    Object value = idToken.get(claim);
+    return value != null ? value.toString() : null;
+  }
+
   private static Optional<MemberEntity> memberMapper(String idTokenKey, GoogleIdToken.Payload idToken, MemberEntity entity, Set<RoleEntity> roleEntitys) {
     if (entity != null) {
-      entity.setFullname(idToken.get("name").toString());
-      entity.setNickname(idToken.get("given_name").toString());
-      entity.setPicture(idToken.get("picture").toString());
+      entity.setFullname(getClaimString(idToken, "name"));
+      entity.setNickname(getClaimString(idToken, "given_name"));
+      entity.setPicture(getClaimString(idToken, "picture"));
       entity.setGoogleToken(idToken.getUserId());
       return Optional.of(entity);
     } else {
       return Optional.of(MemberEntity.builder()
           .email(idToken.getEmail())
           .username(idToken.getEmail())
-          .fullname(idToken.get("name").toString())
-          .nickname(idToken.get("given_name").toString())
-          .locale(idToken.get("locale").toString())
-          .picture(idToken.get("picture").toString())
+          .fullname(getClaimString(idToken, "name"))
+          .nickname(getClaimString(idToken, "given_name"))
+          .locale(getClaimString(idToken, "locale"))
+          .picture(getClaimString(idToken, "picture"))
           .status(1)
           .roles(roleEntitys)
           .googleToken(idToken.getUserId())
