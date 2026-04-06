@@ -9,10 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import com.heloword.common.entity.vocab.UserCustomGroupEntity;
 import com.heloword.common.entity.vocab.UserCustomWordEntity;
+import com.heloword.common.exception.HeloServiceException;
 import com.heloword.common.model.dto.UserCustomGroupDto;
 import com.heloword.common.model.dto.UserCustomWordDto;
 import com.heloword.common.repo.vocab.UserCustomGroupRepository;
 import com.heloword.common.repo.vocab.UserCustomWordRepository;
+import com.heloword.common.type.ResponseCode;
 import com.heloword.record.service.UserCustomVocabService;
 
 @Slf4j
@@ -20,6 +22,8 @@ import com.heloword.record.service.UserCustomVocabService;
 public class UserCustomVocabServiceImpl implements UserCustomVocabService {
 
   private static final int STATUS_ACTIVE = 1;
+  private static final int MAX_GROUPS_PER_USER = 30;
+  private static final int MAX_WORDS_PER_GROUP = 500;
 
   @Autowired
   private UserCustomGroupRepository groupRepo;
@@ -38,6 +42,9 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
 
   @Override
   public UserCustomGroupDto createGroup(String username, UserCustomGroupDto dto) {
+    if (groupRepo.countByUsernameAndStatus(username, STATUS_ACTIVE) >= MAX_GROUPS_PER_USER) {
+      throw HeloServiceException.of(ResponseCode.GROUP_LIMIT_EXCEEDED);
+    }
     UserCustomGroupEntity entity = UserCustomGroupEntity.builder()
         .username(username)
         .name(dto.getName())
@@ -89,6 +96,9 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
   public UserCustomWordDto addWord(String username, Long groupId, UserCustomWordDto dto) {
     groupRepo.findByIdAndUsername(groupId, username)
         .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+    if (wordRepo.countByGroupIdAndStatus(groupId, STATUS_ACTIVE) >= MAX_WORDS_PER_GROUP) {
+      throw HeloServiceException.of(ResponseCode.WORD_LIMIT_EXCEEDED);
+    }
     UserCustomWordEntity entity = UserCustomWordEntity.builder()
         .groupId(groupId)
         .username(username)
