@@ -1,6 +1,7 @@
 package com.heloword.frontendapi.service.social.impl;
 
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -148,7 +149,7 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
         : user.getFullname() != null ? user.getFullname()
         : user.getUsername();
 
-    var result = serviceRecordClient.acceptFriendRequest(user.getUsername(), id, addresseeDisplayName);
+    var result = serviceRecordClient.acceptFriendRequest(user.getUsername(), id, encodeHeader(addresseeDisplayName));
     var accepted = result.getData();
     if (accepted == null) {
       // Service-record rejected the request (e.g. "Not authorized", "not found").
@@ -170,7 +171,7 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
           .findFirst()
           .ifPresent(displayName -> {
             try {
-              serviceRecordClient.updateFriendNickname(user.getUsername(), id, displayName);
+              serviceRecordClient.updateFriendNickname(user.getUsername(), id, encodeHeader(displayName));
             } catch (Exception e) {
               log.warn("acceptFriendRequest — could not set default addresseeNickname for id={}: {}", id, e.getMessage());
             }
@@ -202,7 +203,7 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   @Override
   public void updateFriendNickname(UserDto user, Long id, String nickname) {
-    serviceRecordClient.updateFriendNickname(user.getUsername(), id, nickname);
+    serviceRecordClient.updateFriendNickname(user.getUsername(), id, encodeHeader(nickname));
   }
 
   @Override
@@ -258,6 +259,18 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
     } catch (Exception e) {
       log.error("getChatRooms feign call failed — userId={}: {}", userId, e.getMessage(), e);
       throw e;
+    }
+  }
+
+  /** URL-encode a string for safe transmission as an HTTP header value.
+   *  Necessary for non-ASCII content (e.g. Chinese display names) because
+   *  HTTP/1.1 headers are Latin-1; the receiver decodes with URLDecoder. */
+  private static String encodeHeader(String value) {
+    if (value == null) return null;
+    try {
+      return URLEncoder.encode(value, StandardCharsets.UTF_8.name());
+    } catch (Exception e) {
+      return value;
     }
   }
 
