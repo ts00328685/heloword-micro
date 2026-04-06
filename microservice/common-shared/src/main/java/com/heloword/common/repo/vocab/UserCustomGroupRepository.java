@@ -11,5 +11,7 @@ public interface UserCustomGroupRepository extends IBaseRepo<UserCustomGroupEnti
 
   List<UserCustomGroupEntity> findAllByUsernameAndStatus(String username, Integer status);
 
+  long countByUsernameAndStatus(String username, Integer status);
+
   Optional<UserCustomGroupEntity> findByIdAndUsername(Long id, String username);
 }
