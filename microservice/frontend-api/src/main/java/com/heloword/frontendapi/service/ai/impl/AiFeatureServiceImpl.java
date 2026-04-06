@@ -20,7 +20,7 @@ import com.heloword.frontendapi.service.ai.AiFeatureService;
 public class AiFeatureServiceImpl implements AiFeatureService {
 
   private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "qwen3:1.7b";
+  private static final String MODEL = "gemma4:e2b";
 
   private final RestTemplate restTemplate = new RestTemplate();
 
