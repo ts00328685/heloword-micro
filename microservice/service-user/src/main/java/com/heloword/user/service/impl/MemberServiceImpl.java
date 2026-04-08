@@ -22,4 +22,8 @@ public class MemberServiceImpl extends AbstractBaseServiceImpl<MemberEntity, Lon
   public MemberEntity findByEmail(String email) {
     return memberRepository.findByEmail(email);
   }
+
+  public MemberEntity findByUuid(String uuid) {
+    return memberRepository.findByUuid(uuid);
+  }
 }

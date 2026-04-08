@@ -18,6 +18,9 @@ public interface ServiceUserClient {
   @GetMapping("/api/user/email/{email}")
   HeloResponse<MemberEntity> getMemberByEmail(@PathVariable String email);
 
+  @GetMapping("/api/user/uuid/{uuid}")
+  HeloResponse<MemberEntity> getMemberByUuid(@PathVariable String uuid);
+
   @GetMapping("/api/role/{id}")
   HeloResponse<RoleEntity> getRoleById(@PathVariable Long id);
 

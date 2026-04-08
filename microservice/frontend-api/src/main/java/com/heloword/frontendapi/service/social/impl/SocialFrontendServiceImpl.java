@@ -12,8 +12,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import com.heloword.common.entity.user.MemberEntity;
 import com.heloword.common.exception.HeloServiceException;
 import com.heloword.common.feignclient.ServiceRecordClient;
+import com.heloword.common.feignclient.ServiceUserClient;
 import com.heloword.common.type.ResponseCode;
 import com.heloword.common.model.dto.ChatMessageDto;
 import com.heloword.common.model.dto.FriendDto;
@@ -35,6 +37,7 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
 
   private RedisTemplate<String, Object> redisTemplate;
   private ServiceRecordClient serviceRecordClient;
+  private ServiceUserClient serviceUserClient;
   private SocialPushService socialPushService;
 
   @Override
@@ -103,8 +106,23 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
       boolean iAmRequester = user.getUsername().equals(requesterUsername);
       log.debug("getFriends — caller={} requester={} addressee={} iAmRequester={}",
           user.getUsername(), requesterUsername, addresseeUsername, iAmRequester);
-      String otherUserId = iAmRequester ? addresseeUsername : requesterUsername;
+      String otherUsername = iAmRequester ? addresseeUsername : requesterUsername;
       String myNickname = iAmRequester ? f.getRequesterNickname() : f.getAddresseeNickname();
+
+      // Resolve email-based username to UUID + profile display name in one call
+      MemberEntity otherMember = null;
+      try {
+        otherMember = serviceUserClient.getMemberByEmail(otherUsername).getData();
+      } catch (Exception e) {
+        log.warn("getFriends — lookup failed for otherUsername={}: {}", otherUsername, e.getMessage());
+      }
+      String otherUserId = (otherMember != null && otherMember.getUuid() != null)
+          ? otherMember.getUuid() : otherUsername;
+      String otherProfileName = otherMember != null && otherMember.getNickname() != null
+          ? otherMember.getNickname()
+          : otherMember != null && otherMember.getFullname() != null
+              ? otherMember.getFullname()
+              : null;
 
       String status;
       if ("ACCEPTED".equals(f.getFriendStatus())) {
@@ -118,7 +136,7 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
       return FriendResponseDto.builder()
           .id(f.getId())
           .otherUserId(otherUserId)
-          .displayName(myNickname != null ? myNickname : otherUserId)
+          .displayName(myNickname != null ? myNickname : otherProfileName != null ? otherProfileName : otherUserId)
           .myNickname(myNickname)
           .status(status)
           .isOnline(onlineIds.contains(otherUserId))
@@ -126,13 +144,61 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
     }).collect(Collectors.toList());
   }
 
+  /** Resolves a username (email) to the member's UUID. Falls back to the original value on failure. */
+  private String resolveUsernameToUuid(String username) {
+    if (username == null) return null;
+    try {
+      MemberEntity member = serviceUserClient.getMemberByEmail(username).getData();
+      if (member != null && member.getUuid() != null) {
+        return member.getUuid();
+      }
+    } catch (Exception e) {
+      log.warn("resolveUsernameToUuid — lookup failed for username={}: {}", username, e.getMessage());
+    }
+    return username; // fallback: return email if UUID not yet populated
+  }
+
+  /** UUID pattern: 8-4-4-4-12 hex chars, with optional trailing '=' from Feign encoding */
+  private static final java.util.regex.Pattern UUID_PATTERN =
+      java.util.regex.Pattern.compile(
+          "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}=*",
+          java.util.regex.Pattern.CASE_INSENSITIVE);
+
+  /**
+   * If addresseeUsername looks like a UUID (online-list userId after the heartbeat UUID change),
+   * resolve it to the actual username via the user service before forwarding to service-record.
+   */
+  private String resolveAddresseeUsername(String input) {
+    if (input == null) return null;
+    String stripped = input.replaceAll("=+$", ""); // strip Feign-appended '='
+    if (UUID_PATTERN.matcher(stripped).matches()) {
+      try {
+        MemberEntity member = serviceUserClient.getMemberByUuid(stripped).getData();
+        if (member != null && member.getUsername() != null) {
+          log.debug("resolveAddresseeUsername — resolved uuid={} to username={}", stripped, member.getUsername());
+          return member.getUsername();
+        }
+        log.warn("resolveAddresseeUsername — uuid={} not found in user service", stripped);
+        return null;
+      } catch (Exception e) {
+        log.error("resolveAddresseeUsername — lookup failed for uuid={}: {}", stripped, e.getMessage());
+        return null;
+      }
+    }
+    return input;
+  }
+
   @Override
   public FriendDto sendFriendRequest(UserDto user, String addresseeUsername) {
     try {
-      log.info("sendFriendRequest — requester={} addressee=[{}] len={}",
-          user.getUsername(), addresseeUsername, addresseeUsername == null ? -1 : addresseeUsername.length());
-      FriendDto saved = serviceRecordClient.sendFriendRequest(user.getUsername(), addresseeUsername).getData();
-      socialPushService.sendFriendRequestToUser(addresseeUsername, user.getUsername());
+      String resolvedAddressee = resolveAddresseeUsername(addresseeUsername);
+      log.info("sendFriendRequest — requester={} addressee=[{}] resolved=[{}]",
+          user.getUsername(), addresseeUsername, resolvedAddressee);
+      if (resolvedAddressee == null) {
+        throw HeloServiceException.of(ResponseCode.SYSTEM_ERROR);
+      }
+      FriendDto saved = serviceRecordClient.sendFriendRequest(user.getUsername(), resolvedAddressee).getData();
+      socialPushService.sendFriendRequestToUser(resolvedAddressee, user.getUsername());
       return saved;
     } catch (Exception e) {
       log.error("sendFriendRequest feign call failed — requester={} addressee={}: {}",

@@ -1,19 +1,12 @@
 package com.heloword.frontendapi.rest.social;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import com.heloword.common.model.dto.UserDto;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import com.heloword.common.model.dto.ChatMessageDto;
@@ -29,16 +22,33 @@ public class SocialRestController extends AbstractBaseFrontendRestController {
 
   private SocialFrontendService socialFrontendService;
 
-  // ── Online presence (no auth restriction — both MEMBER + UNREGISTERED_MEMBER) ──
+  // ── Online presence (open to MEMBER + UNREGISTERED_MEMBER) ──────────────────
 
   @PostMapping("/heartbeat")
   public HeloResponse<?> heartbeat(@RequestBody HeartbeatRequest request) {
+    Optional<UserDto> currentUser = getUser();
+    if (currentUser.isPresent()) {
+      UserDto user = currentUser.get();
+      // Use UUID if available; fall back to username until SQL migration is complete
+      String userId = user.getUuid() != null ? user.getUuid() : user.getUsername();
+      request.setUserId(userId);
+      request.setDisplayName(user.getNickname() != null ? user.getNickname() : user.getUsername());
+      request.setIsGuest(false);
+    }
+    // Guest: allow request-supplied values as-is (no server-side identity to verify)
     socialFrontendService.heartbeat(request);
     return HeloResponse.successWithoutData();
   }
 
   @DeleteMapping("/heartbeat/{userId}")
   public HeloResponse<?> removeHeartbeat(@PathVariable String userId) {
+    Optional<UserDto> currentUser = getUser();
+    if (currentUser.isPresent()) {
+      String myId = currentUser.get().getUuid() != null ? currentUser.get().getUuid() : currentUser.get().getUsername();
+      if (!myId.equals(userId)) {
+        return fail("Forbidden");
+      }
+    }
     socialFrontendService.removeHeartbeat(userId);
     return HeloResponse.successWithoutData();
   }
@@ -48,33 +58,47 @@ public class SocialRestController extends AbstractBaseFrontendRestController {
     return HeloResponse.successWithData(socialFrontendService.getOnlineUsers());
   }
 
-  // ── Chat (no auth restriction) ────────────────────────────────────────────
+  // ── Chat (MEMBER only) ────────────────────────────────────────────────────
 
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PostMapping("/messages")
   public HeloResponse<?> sendMessage(@RequestBody ChatMessageDto dto) {
+    UserDto user = getUser().get();
+    String userId = user.getUuid() != null ? user.getUuid() : user.getUsername();
+    dto.setSenderUserId(userId);
+    dto.setSenderDisplayName(user.getNickname() != null ? user.getNickname() : user.getUsername());
     return HeloResponse.successWithData(socialFrontendService.sendMessage(dto));
   }
 
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
   @GetMapping("/messages/room/{roomId}")
   public HeloResponse<?> getMessages(@PathVariable String roomId,
       @RequestParam(required = false) Long since) {
     return HeloResponse.successWithData(socialFrontendService.getMessages(roomId, since));
   }
 
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PostMapping("/messages/read/{roomId}")
-  public HeloResponse<?> markRoomRead(@PathVariable String roomId,
-      @RequestParam String recipientUserId) {
-    socialFrontendService.markRoomRead(recipientUserId, roomId);
+  public HeloResponse<?> markRoomRead(@PathVariable String roomId) {
+    UserDto user = getUser().get();
+    String userId = user.getUuid() != null ? user.getUuid() : user.getUsername();
+    socialFrontendService.markRoomRead(userId, roomId);
     return HeloResponse.successWithoutData();
   }
 
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
   @GetMapping("/messages/unread")
-  public HeloResponse<?> getUnreadCounts(@RequestParam String recipientUserId) {
-    return HeloResponse.successWithData(socialFrontendService.getUnreadCounts(recipientUserId));
+  public HeloResponse<?> getUnreadCounts() {
+    UserDto user = getUser().get();
+    String userId = user.getUuid() != null ? user.getUuid() : user.getUsername();
+    return HeloResponse.successWithData(socialFrontendService.getUnreadCounts(userId));
   }
 
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
   @GetMapping("/messages/rooms")
-  public HeloResponse<?> getChatRooms(@RequestParam String userId) {
+  public HeloResponse<?> getChatRooms() {
+    UserDto user = getUser().get();
+    String userId = user.getUuid() != null ? user.getUuid() : user.getUsername();
     return HeloResponse.successWithData(socialFrontendService.getChatRooms(userId));
   }
 

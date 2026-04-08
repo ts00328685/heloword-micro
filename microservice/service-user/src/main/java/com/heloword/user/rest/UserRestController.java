@@ -25,8 +25,12 @@ public class UserRestController extends AbstractBaseRestController<MemberEntity,
 
   @GetMapping("/email/{email}")
   public HeloResponse<?> findByEmail(@PathVariable String email) {
-
     return success(memberService.findByEmail(email));
+  }
+
+  @GetMapping("/uuid/{uuid}")
+  public HeloResponse<?> findByUuid(@PathVariable String uuid) {
+    return success(memberService.findByUuid(uuid));
   }
   
 }

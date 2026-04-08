@@ -9,6 +9,7 @@ import com.heloword.frontendapi.model.challenge.JoinRoomRequest;
 public interface ChallengeService {
   List<ChallengeRoomDto> listRooms();
   ChallengeRoomDto createRoom(String hostUserId, String hostDisplayName, CreateRoomRequest req);
+  ChallengeRoomDto createRoom(String hostUserId, String hostUsername, String hostDisplayName, CreateRoomRequest req);
   ChallengeRoomDto joinRoom(String roomId, JoinRoomRequest req);
   void leaveRoom(String roomId, String userId);
   void startGame(String roomId, String requestingUserId);

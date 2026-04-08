@@ -1,12 +1,14 @@
 package com.heloword.common.entity.user;
 
 import java.util.Set;
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.PrePersist;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import org.springframework.data.redis.core.RedisHash;
@@ -28,6 +30,9 @@ import lombok.experimental.SuperBuilder;
 public class MemberEntity extends BaseEntity {
 
   @Column(unique = true)
+  private String uuid;
+
+  @Column(unique = true)
   private String username;
   private String fullname;
   private String nickname;
@@ -41,6 +46,13 @@ public class MemberEntity extends BaseEntity {
   private String googleToken;
   @Column(length = 1024)
   private String facebookToken;
+
+  @PrePersist
+  protected void assignUuid() {
+    if (this.uuid == null) {
+      this.uuid = UUID.randomUUID().toString();
+    }
+  }
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(name = "MEMBER_ROLE",
