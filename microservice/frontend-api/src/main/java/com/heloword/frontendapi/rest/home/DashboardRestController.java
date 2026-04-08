@@ -1,7 +1,9 @@
 package com.heloword.frontendapi.rest.home;
 
+import java.util.ArrayList;
 import java.util.List;
-import org.springframework.security.access.prepost.PreAuthorize;
+import java.util.Random;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,19 +36,26 @@ public class DashboardRestController extends AbstractBaseFrontendRestController 
 
   private DashboardResponse sliceResponse(DashboardResponse r, int n) {
     return DashboardResponse.builder()
-        .wordEnglishList(slice(r.getWordEnglishList(), n))
-        .wordGermanList(slice(r.getWordGermanList(), n))
-        .wordJapaneseList(slice(r.getWordJapaneseList(), n))
-        .wordJapaneseVerbList(slice(r.getWordJapaneseVerbList(), n))
-        .sentenceEnglishList(slice(r.getSentenceEnglishList(), n))
-        .sentenceGermanList(slice(r.getSentenceGermanList(), n))
-        .sentenceJapaneseList(slice(r.getSentenceJapaneseList(), n))
+        .wordEnglishList(randomSlice(r.getWordEnglishList(), n))
+        .wordGermanList(randomSlice(r.getWordGermanList(), n))
+        .wordJapaneseList(randomSlice(r.getWordJapaneseList(), n))
+        .wordJapaneseVerbList(randomSlice(r.getWordJapaneseVerbList(), n))
+        .sentenceEnglishList(randomSlice(r.getSentenceEnglishList(), n))
+        .sentenceGermanList(randomSlice(r.getSentenceGermanList(), n))
+        .sentenceJapaneseList(randomSlice(r.getSentenceJapaneseList(), n))
         .build();
   }
 
-  private <T> List<T> slice(List<T> list, int n) {
+  private <T> List<T> randomSlice(List<T> list, int n) {
     if (list == null || list.isEmpty()) return list;
-    return list.subList(0, Math.min(n, list.size()));
+    List<T> shuffled = new ArrayList<>();
+    int min = Math.min(n, list.size());
+    Random rand = new Random();
+    for (int i = 0; i < n; i++) {
+        int randomIndex = rand.nextInt(list.size());
+        shuffled.add(list.get(randomIndex));
+    }
+    return shuffled.subList(0, min);
   }
 
 }
