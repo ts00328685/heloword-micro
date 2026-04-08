@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.rest.home;
 
+import java.util.Collections;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +47,7 @@ public class DashboardRestController extends AbstractBaseFrontendRestController 
 
   private <T> List<T> slice(List<T> list, int n) {
     if (list == null || list.isEmpty()) return list;
+    Collections.shuffle(list);
     return list.subList(0, Math.min(n, list.size()));
   }
 
