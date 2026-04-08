@@ -13,6 +13,8 @@ public class ChallengeRoomState {
   private String id;
   private String name;
   private String hostUserId;
+  /** Fallback: the host's username (email) stored alongside hostUserId for UUID/email migration compatibility */
+  private String hostUsername;
   private String gameType;
   /** TYPING (default) or MULTI_CHOICE */
   private String gameFormat;

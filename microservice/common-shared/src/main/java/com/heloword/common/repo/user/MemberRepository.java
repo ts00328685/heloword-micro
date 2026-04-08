@@ -5,4 +5,5 @@ import com.heloword.common.entity.user.MemberEntity;
 
 public interface MemberRepository extends IBaseRepo<MemberEntity, Long> {
   MemberEntity findByEmail(String email);
+  MemberEntity findByUuid(String uuid);
 }

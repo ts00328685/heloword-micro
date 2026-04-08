@@ -2,6 +2,7 @@ package com.heloword.common.model.dto;
 
 import java.util.Set;
 import org.springframework.beans.BeanUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.heloword.common.entity.user.MemberEntity;
 import com.heloword.common.entity.user.RoleEntity;
 
@@ -10,13 +11,16 @@ import lombok.Data;
 @Data
 public class UserDto {
 
+  private String uuid;
   private String username;
   private String fullname;
   private String nickname;
   private String picture;
   private String locale;
   private String email;
+  @JsonIgnore
   private String googleToken;
+  @JsonIgnore
   private String facebookToken;
   private Set<RoleEntity> roles;
 

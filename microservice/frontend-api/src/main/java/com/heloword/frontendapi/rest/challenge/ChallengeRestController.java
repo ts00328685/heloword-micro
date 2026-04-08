@@ -1,6 +1,7 @@
 package com.heloword.frontendapi.rest.challenge;
 
 import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.heloword.common.model.dto.UserDto;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.BASE_FRONTEND_API_URL;
@@ -32,27 +34,38 @@ public class ChallengeRestController extends AbstractBaseFrontendRestController 
   @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PostMapping("/rooms")
   public HeloResponse<ChallengeRoomDto> createRoom(@RequestBody CreateRoomRequest req) {
-    var user = getUser().get();
+    UserDto user = getUser().get();
+    String displayName = user.getNickname() != null ? user.getNickname() : user.getUsername();
     return HeloResponse.successWithData(
-        challengeService.createRoom(user.getUsername(),
-            user.getNickname() != null ? user.getNickname() : user.getUsername(), req));
+        challengeService.createRoom(user.getUsername(), user.getUsername(), displayName, req));
   }
 
   @PostMapping("/rooms/{roomId}/join")
   public HeloResponse<ChallengeRoomDto> joinRoom(@PathVariable String roomId,
       @RequestBody JoinRoomRequest req) {
+    Optional<UserDto> currentUser = getUser();
+    if (currentUser.isPresent()) {
+      UserDto user = currentUser.get();
+      req.setUserId(user.getUsername());
+      req.setDisplayName(user.getNickname() != null ? user.getNickname() : user.getUsername());
+      req.setGuest(false);
+    }
     return HeloResponse.successWithData(challengeService.joinRoom(roomId, req));
   }
 
   @PostMapping("/rooms/{roomId}/leave")
   public HeloResponse<?> leaveRoom(@PathVariable String roomId, @RequestBody JoinRoomRequest req) {
-    challengeService.leaveRoom(roomId, req.getUserId());
+    Optional<UserDto> currentUser = getUser();
+    String userId = currentUser.isPresent() ? currentUser.get().getUsername() : req.getUserId();
+    if (userId == null) return HeloResponse.successWithoutData();
+    challengeService.leaveRoom(roomId, userId);
     return HeloResponse.successWithoutData();
   }
 
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PostMapping("/rooms/{roomId}/start")
   public HeloResponse<?> startGame(@PathVariable String roomId, @RequestBody JoinRoomRequest req) {
-    challengeService.startGame(roomId, req.getUserId());
+    challengeService.startGame(roomId, getUser().get().getUsername());
     return HeloResponse.successWithoutData();
   }
 }

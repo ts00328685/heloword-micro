@@ -36,6 +36,7 @@ import com.heloword.frontendapi.service.challenge.ChallengeService;
 public class ChallengeServiceImpl implements ChallengeService {
 
   private static final int QUESTION_TIMEOUT_SECONDS = 10;
+  private static final int QUESTION_TIMEOUT_SECONDS_MC = 5;
   private static final int NEXT_QUESTION_DELAY_SECONDS = 3;
   private static final int SYSTEM_RESTART_DELAY_SECONDS = 10;
   private static final int MAX_POOL_SIZE = 200;
@@ -92,12 +93,18 @@ public class ChallengeServiceImpl implements ChallengeService {
 
   @Override
   public ChallengeRoomDto createRoom(String hostUserId, String hostDisplayName, CreateRoomRequest req) {
+    return createRoom(hostUserId, null, hostDisplayName, req);
+  }
+
+  @Override
+  public ChallengeRoomDto createRoom(String hostUserId, String hostUsername, String hostDisplayName, CreateRoomRequest req) {
     int rounds = Math.min(20, Math.max(5, req.getTotalRounds() == 0 ? 10 : req.getTotalRounds()));
     String id = UUID.randomUUID().toString();
     ChallengeRoomState room = ChallengeRoomState.builder()
         .id(id)
         .name(StringUtils.isBlank(req.getName()) ? hostDisplayName + "'s Room" : req.getName().trim())
         .hostUserId(hostUserId)
+        .hostUsername(hostUsername)
         .gameType(req.getGameType())
         .status("WAITING")
         .system(false)
@@ -147,7 +154,9 @@ public class ChallengeServiceImpl implements ChallengeService {
   public void startGame(String roomId, String requestingUserId) {
     ChallengeRoomState room = rooms.get(roomId);
     if (room == null) return;
-    if (!room.isSystem() && !room.getHostUserId().equals(requestingUserId)) return;
+    if (!room.isSystem()
+        && !room.getHostUserId().equals(requestingUserId)
+        && (room.getHostUsername() == null || !room.getHostUsername().equals(requestingUserId))) return;
     if ("PLAYING".equals(room.getStatus())) return;
 
     List<ChallengeQuestion> pool = loadWordPool(room.getGameType(), room.getWordMinId(), room.getWordMaxId());
@@ -258,19 +267,20 @@ public class ChallengeServiceImpl implements ChallengeService {
     room.setQuestionStartTime(System.currentTimeMillis());
     room.getCurrentQuestionAnsweredPlayers().clear();
 
+    int timeoutSecs = isMultiChoice ? QUESTION_TIMEOUT_SECONDS_MC : QUESTION_TIMEOUT_SECONDS;
     pushService.broadcastRoomEvent(room.getId(), ChallengeEventDto.builder()
         .type("QUESTION")
         .roundNumber(round)
         .totalRounds(room.getTotalRounds())
         .question(q.getQuestion())
         .questionId(q.getId())
-        .timeoutSeconds(QUESTION_TIMEOUT_SECONDS)
+        .timeoutSeconds(timeoutSecs)
         .hint(hint)
         .choices(choices)
         .build());
 
     // Schedule timeout
-    room.setQuestionTimer(scheduler.schedule(() -> handleQuestionTimeout(room, q.getId()), QUESTION_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+    room.setQuestionTimer(scheduler.schedule(() -> handleQuestionTimeout(room, q.getId()), timeoutSecs, TimeUnit.SECONDS));
   }
 
   /** Builds a shuffled list of 4 choices (1 correct + 3 distractors) for MULTI_CHOICE rooms.
@@ -413,7 +423,8 @@ public class ChallengeServiceImpl implements ChallengeService {
     // Include active-question snapshot for late joiners
     if ("PLAYING".equals(room.getStatus()) && room.getCurrentQuestionId() != null) {
       int elapsed = (int) ((System.currentTimeMillis() - room.getQuestionStartTime()) / 1000);
-      int remaining = Math.max(0, QUESTION_TIMEOUT_SECONDS - elapsed);
+      int timeoutSecs = "MULTI_CHOICE".equals(room.getGameFormat()) ? QUESTION_TIMEOUT_SECONDS_MC : QUESTION_TIMEOUT_SECONDS;
+      int remaining = Math.max(0, timeoutSecs - elapsed);
       builder.currentQuestion(room.getCurrentQuestion())
              .currentQuestionId(room.getCurrentQuestionId())
              .currentHint(room.getCurrentHint())
