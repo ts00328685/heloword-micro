@@ -275,6 +275,8 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
   @Override
   public ChatMessageDto sendMessage(ChatMessageDto dto) {
     try {
+      String recipientNickname = serviceUserClient.getMemberByUuid(dto.getRecipientUserId()).getData().getNickname();
+      dto.setRecipientDisplayName(recipientNickname);
       ChatMessageDto saved = serviceRecordClient.sendMessage(dto).getData();
       if (saved != null && saved.getRecipientUserId() != null) {
         socialPushService.sendMessageToUser(saved.getRecipientUserId(), saved);

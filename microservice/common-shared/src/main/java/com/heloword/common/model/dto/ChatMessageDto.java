@@ -11,6 +11,7 @@ public class ChatMessageDto {
   private String senderUserId;
   private String senderDisplayName;
   private String recipientUserId;
+  private String recipientDisplayName;
   private String roomId;
   private String content;
   private Date readAt;
@@ -28,6 +29,7 @@ public class ChatMessageDto {
     dto.setSenderUserId(entity.getSenderUserId());
     dto.setSenderDisplayName(entity.getSenderDisplayName());
     dto.setRecipientUserId(entity.getRecipientUserId());
+    dto.setRecipientDisplayName(entity.getRecipientDisplayName());
     dto.setRoomId(entity.getRoomId());
     dto.setContent(entity.getContent());
     dto.setReadAt(entity.getReadAt());
