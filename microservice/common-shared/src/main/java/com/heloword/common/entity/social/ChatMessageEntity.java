@@ -23,6 +23,7 @@ public class ChatMessageEntity extends BaseEntity {
   private String senderDisplayName;
   /** Recipient identifier: username (logged-in) or guest UUID */
   private String recipientUserId;
+  private String recipientDisplayName;
   /** Computed room id: sorted(sender, recipient).join(':') */
   private String roomId;
   @Column(length = 4096)

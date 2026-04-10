@@ -35,9 +35,9 @@ public class ChallengeRestController extends AbstractBaseFrontendRestController 
   @PostMapping("/rooms")
   public HeloResponse<ChallengeRoomDto> createRoom(@RequestBody CreateRoomRequest req) {
     UserDto user = getUser().get();
-    String displayName = user.getNickname() != null ? user.getNickname() : user.getUsername();
+    String displayName = user.getNickname() != null ? user.getNickname() : user.getUuid();
     return HeloResponse.successWithData(
-        challengeService.createRoom(user.getUsername(), user.getUsername(), displayName, req));
+        challengeService.createRoom(user.getUuid(), user.getUuid(), displayName, req));
   }
 
   @PostMapping("/rooms/{roomId}/join")
@@ -46,8 +46,8 @@ public class ChallengeRestController extends AbstractBaseFrontendRestController 
     Optional<UserDto> currentUser = getUser();
     if (currentUser.isPresent()) {
       UserDto user = currentUser.get();
-      req.setUserId(user.getUsername());
-      req.setDisplayName(user.getNickname() != null ? user.getNickname() : user.getUsername());
+      req.setUserId(user.getUuid());
+      req.setDisplayName(user.getNickname() != null ? user.getNickname() : user.getUuid());
       req.setGuest(false);
     }
     return HeloResponse.successWithData(challengeService.joinRoom(roomId, req));
@@ -56,7 +56,7 @@ public class ChallengeRestController extends AbstractBaseFrontendRestController 
   @PostMapping("/rooms/{roomId}/leave")
   public HeloResponse<?> leaveRoom(@PathVariable String roomId, @RequestBody JoinRoomRequest req) {
     Optional<UserDto> currentUser = getUser();
-    String userId = currentUser.isPresent() ? currentUser.get().getUsername() : req.getUserId();
+    String userId = currentUser.isPresent() ? currentUser.get().getUuid() : req.getUserId();
     if (userId == null) return HeloResponse.successWithoutData();
     challengeService.leaveRoom(roomId, userId);
     return HeloResponse.successWithoutData();
@@ -65,7 +65,7 @@ public class ChallengeRestController extends AbstractBaseFrontendRestController 
   @PreAuthorize("hasAnyAuthority('MEMBER')")
   @PostMapping("/rooms/{roomId}/start")
   public HeloResponse<?> startGame(@PathVariable String roomId, @RequestBody JoinRoomRequest req) {
-    challengeService.startGame(roomId, getUser().get().getUsername());
+    challengeService.startGame(roomId, getUser().get().getUuid());
     return HeloResponse.successWithoutData();
   }
 }
