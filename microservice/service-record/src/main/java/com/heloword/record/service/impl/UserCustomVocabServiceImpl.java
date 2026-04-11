@@ -50,6 +50,7 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
         .name(dto.getName())
         .description(dto.getDescription())
         .language(dto.getLanguage())
+        .tags(dto.getTags())
         .status(STATUS_ACTIVE)
         .createDate(new Date())
         .updateDate(new Date())
@@ -65,6 +66,7 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
     entity.setName(dto.getName());
     entity.setDescription(dto.getDescription());
     entity.setLanguage(dto.getLanguage());
+    entity.setTags(dto.getTags());
     entity.setUpdateDate(new Date());
     entity = groupRepo.save(entity);
     int wordCount = (int) wordRepo.countByGroupIdAndStatus(id, STATUS_ACTIVE);
@@ -148,6 +150,7 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
     dto.setName(e.getName());
     dto.setDescription(e.getDescription());
     dto.setLanguage(e.getLanguage());
+    dto.setTags(e.getTags());
     dto.setWordCount(wordCount);
     dto.setCreateDate(e.getCreateDate());
     return dto;

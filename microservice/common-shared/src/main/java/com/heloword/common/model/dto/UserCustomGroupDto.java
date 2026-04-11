@@ -9,6 +9,7 @@ public class UserCustomGroupDto {
   private String name;
   private String description;
   private String language;
+  private String tags;
   private Integer wordCount;
   private Date createDate;
 }

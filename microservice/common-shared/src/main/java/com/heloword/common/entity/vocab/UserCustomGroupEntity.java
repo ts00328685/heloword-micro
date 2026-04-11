@@ -21,4 +21,6 @@ public class UserCustomGroupEntity extends BaseEntity {
   private String description;
   /** Language hint: EN, JA, DE, or user-defined */
   private String language;
+  /** Comma-separated tags for search/filtering */
+  private String tags;
 }
