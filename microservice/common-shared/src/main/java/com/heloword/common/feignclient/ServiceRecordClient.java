@@ -20,6 +20,7 @@ import com.heloword.common.entity.social.FriendEntity;
 import com.heloword.common.filter.FeignClientInterceptor;
 import com.heloword.common.model.dto.ChatMessageDto;
 import com.heloword.common.model.dto.FriendDto;
+import com.heloword.common.model.dto.SharedVocabGroupDto;
 import com.heloword.common.model.dto.UserCustomGroupDto;
 import com.heloword.common.model.dto.UserCustomWordDto;
 import com.heloword.common.model.dto.VocabShareRequestDto;
@@ -142,5 +143,42 @@ public interface ServiceRecordClient {
 
   @PostMapping("/api/vocab-share/{id}/reject")
   HeloResponse<?> rejectVocabShare(@RequestHeader String username, @PathVariable Long id);
+
+  // ── Shared Vocabulary (public groups) ────────────────────────────────────
+
+  @GetMapping("/api/shared-vocab/groups")
+  HeloResponse<List<SharedVocabGroupDto>> getSharedGroups();
+
+  @GetMapping("/api/shared-vocab/groups/{shareId}/words")
+  HeloResponse<List<UserCustomWordDto>> getSharedGroupWords(@PathVariable Long shareId);
+
+  @PostMapping("/api/shared-vocab/request")
+  HeloResponse<SharedVocabGroupDto> requestPublicShare(
+      @RequestHeader String username,
+      @RequestHeader String requesterUuid,
+      @RequestHeader String requesterDisplayName,
+      @RequestBody SharedVocabGroupDto dto);
+
+  @GetMapping("/api/shared-vocab/status/{groupId}")
+  HeloResponse<SharedVocabGroupDto> getPublicShareStatus(
+      @RequestHeader String username,
+      @PathVariable Long groupId);
+
+  @GetMapping("/api/shared-vocab/admin/pending")
+  HeloResponse<List<SharedVocabGroupDto>> getPendingSharedRequests();
+
+  @PostMapping("/api/shared-vocab/admin/{shareId}/approve")
+  HeloResponse<?> approveSharedRequest(@PathVariable Long shareId);
+
+  @PostMapping("/api/shared-vocab/admin/{shareId}/reject")
+  HeloResponse<?> rejectSharedRequest(@PathVariable Long shareId);
+
+  @DeleteMapping("/api/shared-vocab/admin/{shareId}")
+  HeloResponse<?> deleteSharedGroup(@PathVariable Long shareId);
+
+  @PostMapping("/api/shared-vocab/groups/{shareId}/copy")
+  HeloResponse<UserCustomGroupDto> copySharedGroup(
+      @RequestHeader String username,
+      @PathVariable Long shareId);
 
 }
