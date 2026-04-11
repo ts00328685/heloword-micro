@@ -30,14 +30,12 @@ public class SharedVocabRestController extends AbstractBaseFrontendRestControlle
 
   /** Public — anyone (including guests) can view approved shared groups */
   @GetMapping("/groups")
-  @PreAuthorize("hasAnyAuthority('MEMBER', 'UNREGISTERED_MEMBER')")
   public HeloResponse<List<SharedVocabGroupDto>> getSharedGroups() {
     return HeloResponse.successWithData(sharedVocabFrontendService.getApprovedGroups());
   }
 
   /** Public — anyone can read words in an approved shared group */
   @GetMapping("/groups/{shareId}/words")
-  @PreAuthorize("hasAnyAuthority('MEMBER', 'UNREGISTERED_MEMBER')")
   public HeloResponse<List<UserCustomWordDto>> getSharedGroupWords(@PathVariable Long shareId) {
     return HeloResponse.successWithData(sharedVocabFrontendService.getGroupWords(shareId));
   }
