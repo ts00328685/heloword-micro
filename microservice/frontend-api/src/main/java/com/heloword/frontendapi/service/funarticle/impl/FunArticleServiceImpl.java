@@ -49,7 +49,7 @@ public class FunArticleServiceImpl implements FunArticleService {
       }});
 
   /** Runs daily at 03:00 Taipei time. Generates articles and persists them via service-record. */
-  @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Taipei")
+//  @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Taipei")
   @CacheEvict(value = CacheConfig.FUN_ARTICLE_CACHE, allEntries = true)
   public void refresh() {
     try {
