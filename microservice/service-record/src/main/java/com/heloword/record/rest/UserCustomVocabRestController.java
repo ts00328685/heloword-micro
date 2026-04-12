@@ -82,6 +82,14 @@ public class UserCustomVocabRestController {
     return HeloResponse.successWithData(vocabService.addWord(decode(username), id, dto));
   }
 
+  @PostMapping("/groups/{id}/words/batch")
+  public HeloResponse<List<UserCustomWordDto>> batchAddWords(
+      @RequestHeader String username,
+      @PathVariable Long id,
+      @RequestBody List<UserCustomWordDto> dtos) {
+    return HeloResponse.successWithData(vocabService.batchAddWords(decode(username), id, dtos));
+  }
+
   @PutMapping("/words/{wordId}")
   public HeloResponse<UserCustomWordDto> updateWord(
       @RequestHeader String username,

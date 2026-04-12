@@ -122,6 +122,36 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
   }
 
   @Override
+  @Transactional
+  public List<UserCustomWordDto> batchAddWords(String username, Long groupId, List<UserCustomWordDto> dtos) {
+    groupRepo.findByIdAndUsername(groupId, username)
+        .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+    long currentCount = wordRepo.countByGroupIdAndStatus(groupId, STATUS_ACTIVE);
+    if (currentCount + dtos.size() > MAX_WORDS_PER_GROUP) {
+      throw HeloServiceException.of(ResponseCode.WORD_LIMIT_EXCEEDED);
+    }
+    Date now = new Date();
+    List<UserCustomWordEntity> entities = dtos.stream().map(dto ->
+        UserCustomWordEntity.builder()
+            .groupId(groupId)
+            .username(username)
+            .word(dto.getWord())
+            .translateEn(dto.getTranslateEn())
+            .translateCh(dto.getTranslateCh())
+            .sentence(dto.getSentence())
+            .phonetics(dto.getPhonetics())
+            .sourceWordId(dto.getSourceWordId())
+            .sourceTableName(dto.getSourceTableName())
+            .tableName("USER_CUSTOM_WORD")
+            .status(STATUS_ACTIVE)
+            .createDate(now)
+            .updateDate(now)
+            .build()
+    ).collect(Collectors.toList());
+    return wordRepo.saveAll(entities).stream().map(this::toWordDto).collect(Collectors.toList());
+  }
+
+  @Override
   public UserCustomWordDto updateWord(String username, Long wordId, UserCustomWordDto dto) {
     UserCustomWordEntity entity = wordRepo.findByIdAndUsername(wordId, username)
         .orElseThrow(() -> new IllegalArgumentException("Word not found"));

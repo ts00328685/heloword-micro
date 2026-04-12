@@ -48,6 +48,11 @@ public class UserCustomVocabFrontendServiceImpl implements UserCustomVocabFronte
   }
 
   @Override
+  public List<UserCustomWordDto> batchAddWords(UserDto user, Long groupId, List<UserCustomWordDto> dtos) {
+    return serviceRecordClient.batchAddCustomWords(user.getUsername(), groupId, dtos).getData();
+  }
+
+  @Override
   public UserCustomWordDto updateWord(UserDto user, Long wordId, UserCustomWordDto dto) {
     return serviceRecordClient.updateCustomWord(user.getUsername(), wordId, dto).getData();
   }
