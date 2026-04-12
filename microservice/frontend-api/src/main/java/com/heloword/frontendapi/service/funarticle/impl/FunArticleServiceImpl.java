@@ -29,7 +29,7 @@ public class FunArticleServiceImpl implements FunArticleService {
 
   private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
   private static final String MODEL = "gemma4:e2b";
-  private static final int ARTICLE_COUNT = 5;
+  private static final int ARTICLE_COUNT = 500;
 
   @Autowired
   private ServiceWordClient serviceWordClient;
@@ -42,7 +42,11 @@ public class FunArticleServiceImpl implements FunArticleService {
   @Lazy
   private FunArticleService self;
 
-  private final RestTemplate restTemplate = new RestTemplate();
+  private final RestTemplate restTemplate = new RestTemplate(
+      new org.springframework.http.client.SimpleClientHttpRequestFactory() {{
+        setConnectTimeout(10_000);
+        setReadTimeout(10 * 60 * 1000);
+      }});
 
   /** Runs at startup then every 6 hours. Generates articles and persists them via service-record. */
   @Scheduled(fixedDelay = 6 * 60 * 60 * 1000L)
@@ -82,7 +86,7 @@ public class FunArticleServiceImpl implements FunArticleService {
   }
 
   @Override
-  @Cacheable(value = CacheConfig.FUN_ARTICLE_CACHE, key = "'all'")
+  @Cacheable(value = CacheConfig.FUN_ARTICLE_CACHE, key = "'all'", unless = "#result.isEmpty()")
   public List<FunArticleDto> getAll() {
     List<FunArticleEntity> entities = serviceRecordClient.getRandomFunArticles().getData();
     if (entities == null) return Collections.emptyList();
@@ -93,12 +97,21 @@ public class FunArticleServiceImpl implements FunArticleService {
 
   @SuppressWarnings("unchecked")
   private String generateArticle(String word) {
-    String system = "You are a funny American comedian who is also a traditional Chinese teacher "
-        + "who explains things in an easy way that a kindergarten would understand.";
-    String user = "Please use the word: " + word + " to write a 100 words short article that is funny "
-        + "and helps people to memorize the word: " + word + ", please also give the traditional chinese "
-        + "and japanese translation of the whole article below, for japanese, please put hirakana in "
-        + "parenthesis next to every kanji word in the article, thanks.";
+    String system = "You are a language teacher who writes short, fun articles to help people memorize English words. "
+        + "You always follow the exact output format given to you. Do not add any extra commentary or sections.";
+    String user = "Write a fun article for the English word \"" + word + "\" using this exact format:\n\n"
+        + "## " + word + "\n\n"
+        + "[Write a funny, easy-to-understand article of about 80-100 words using the word \"" + word + "\" at least twice. "
+        + "Use simple language that a child can understand.]\n\n"
+        + "**Sample Sentences:**\n"
+        + "1. [A short example sentence using \"" + word + "\"]\n"
+        + "2. [Another short example sentence using \"" + word + "\"]\n\n"
+        + "**繁體中文翻譯 (Traditional Chinese):**\n"
+        + "[Translate the article and both sample sentences into Traditional Chinese]\n\n"
+        + "**日本語訳 (Japanese):**\n"
+        + "[Translate the article and both sample sentences into Japanese. "
+        + "For every kanji, add the reading in hiragana in parentheses immediately after it, like: 日本語(にほんご)]\n\n"
+        + "Follow this format exactly. Do not skip any section.";
 
     Map<String, Object> body = Map.of(
         "model", MODEL,
@@ -106,8 +119,8 @@ public class FunArticleServiceImpl implements FunArticleService {
             Map.of("role", "system", "content", system),
             Map.of("role", "user", "content", user)
         ),
-        "think", true,
-        "temperature", 0.8,
+        "think", false,
+        "temperature", 0.6,
         "stream", false
     );
 

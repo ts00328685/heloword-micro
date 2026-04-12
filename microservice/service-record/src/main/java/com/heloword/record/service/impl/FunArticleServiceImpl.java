@@ -21,8 +21,4 @@ public class FunArticleServiceImpl extends AbstractBaseServiceImpl<FunArticleEnt
     return funArticleRepository;
   }
 
-  @Override
-  public List<FunArticleEntity> getRandom5() {
-    return funArticleRepository.findRandom5();
-  }
 }

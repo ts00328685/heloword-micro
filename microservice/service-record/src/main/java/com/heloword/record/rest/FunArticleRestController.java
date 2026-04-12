@@ -1,6 +1,5 @@
 package com.heloword.record.rest;
 
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,7 +30,7 @@ public class FunArticleRestController extends AbstractBaseRestController<FunArti
   }
 
   @GetMapping("/random")
-  public HeloResponse<?> getRandom5() {
-    return success(funArticleService.getRandom5());
+  public HeloResponse<?> getAll() {
+    return success(funArticleService.findAll());
   }
 }

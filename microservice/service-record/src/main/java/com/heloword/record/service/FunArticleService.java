@@ -6,5 +6,4 @@ import com.heloword.common.entity.funarticle.FunArticleEntity;
 
 public interface FunArticleService extends IBaseService<FunArticleEntity, Long> {
 
-  List<FunArticleEntity> getRandom5();
 }

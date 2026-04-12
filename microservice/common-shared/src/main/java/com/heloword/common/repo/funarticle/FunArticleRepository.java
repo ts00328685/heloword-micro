@@ -8,7 +8,4 @@ import com.heloword.common.entity.funarticle.FunArticleEntity;
 
 @Repository
 public interface FunArticleRepository extends IBaseRepo<FunArticleEntity, Long> {
-
-  @Query(value = "SELECT * FROM FUN_ARTICLE ORDER BY RAND() LIMIT 5", nativeQuery = true)
-  List<FunArticleEntity> findRandom5();
 }

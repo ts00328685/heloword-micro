@@ -30,7 +30,7 @@ public class CacheConfig {
     manager.setCaches(Arrays.asList(
         buildCache(DASHBOARD_CACHE, 24, TimeUnit.HOURS, 1),
         buildCache(AI_CACHE, 7, TimeUnit.DAYS, 2000),
-        buildCache(FUN_ARTICLE_CACHE, 1, TimeUnit.HOURS, 1)
+        buildCache(FUN_ARTICLE_CACHE, 5, TimeUnit.HOURS, 1)
     ));
     return manager;
   }
