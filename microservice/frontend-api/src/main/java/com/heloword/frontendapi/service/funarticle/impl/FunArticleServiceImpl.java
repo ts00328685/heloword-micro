@@ -29,7 +29,7 @@ public class FunArticleServiceImpl implements FunArticleService {
 
   private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
   private static final String MODEL = "gemma4:e2b";
-  private static final int ARTICLE_COUNT = 500;
+  private static final int ARTICLE_COUNT = 200;
 
   @Autowired
   private ServiceWordClient serviceWordClient;
@@ -48,8 +48,8 @@ public class FunArticleServiceImpl implements FunArticleService {
         setReadTimeout(10 * 60 * 1000);
       }});
 
-  /** Runs at startup then every 6 hours. Generates articles and persists them via service-record. */
-  @Scheduled(fixedDelay = 6 * 60 * 60 * 1000L)
+  /** Runs daily at 03:00 Taipei time. Generates articles and persists them via service-record. */
+  @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Taipei")
   @CacheEvict(value = CacheConfig.FUN_ARTICLE_CACHE, allEntries = true)
   public void refresh() {
     try {
