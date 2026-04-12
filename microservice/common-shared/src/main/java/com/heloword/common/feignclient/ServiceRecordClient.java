@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.heloword.common.base.dto.HeloResponse;
+import com.heloword.common.entity.funarticle.FunArticleEntity;
 import com.heloword.common.entity.record.RecordQuizEntity;
 import com.heloword.common.entity.record.RecordQuizGroupOverrideEntity;
 import com.heloword.common.entity.record.RecordQuizSettingEntity;
@@ -27,6 +28,16 @@ import com.heloword.common.model.dto.VocabShareRequestDto;
 
 @FeignClient(name = "SERVICE-RECORD", url = "${feign.service-record.url:}", configuration = FeignClientInterceptor.class)
 public interface ServiceRecordClient {
+
+  // ── Fun Articles ──────────────────────────────────────────────────────────
+
+  @PostMapping("/api/fun-article/save")
+  HeloResponse<FunArticleEntity> saveFunArticle(@RequestBody FunArticleEntity entity);
+
+  @GetMapping("/api/fun-article/random")
+  HeloResponse<List<FunArticleEntity>> getRandomFunArticles();
+
+  // ── Quiz Records ──────────────────────────────────────────────────────────
 
   @PostMapping("/api/record-quiz")
   HeloResponse<RecordQuizEntity> saveQuizRecord(RecordQuizEntity recordQuizEntity);

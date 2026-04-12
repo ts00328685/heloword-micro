@@ -1,19 +1,25 @@
 package com.heloword.frontendapi.service.funarticle.impl;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.heloword.common.entity.funarticle.FunArticleEntity;
 import com.heloword.common.entity.word.WordEnglishEntity;
+import com.heloword.common.feignclient.ServiceRecordClient;
 import com.heloword.common.feignclient.ServiceWordClient;
+import com.heloword.frontendapi.config.CacheConfig;
 import com.heloword.frontendapi.model.response.FunArticleDto;
 import com.heloword.frontendapi.service.funarticle.FunArticleService;
 
@@ -28,11 +34,19 @@ public class FunArticleServiceImpl implements FunArticleService {
   @Autowired
   private ServiceWordClient serviceWordClient;
 
-  private final RestTemplate restTemplate = new RestTemplate();
-  private volatile List<FunArticleDto> cachedArticles = new ArrayList<>();
+  @Autowired
+  private ServiceRecordClient serviceRecordClient;
 
-  /** Runs at startup (fixedDelay default initialDelay = 0) then every 6 hours. */
+  /** Self-injection through proxy so getLatest() benefits from getAll() cache. */
+  @Autowired
+  @Lazy
+  private FunArticleService self;
+
+  private final RestTemplate restTemplate = new RestTemplate();
+
+  /** Runs at startup then every 6 hours. Generates articles and persists them via service-record. */
   @Scheduled(fixedDelay = 6 * 60 * 60 * 1000L)
+  @CacheEvict(value = CacheConfig.FUN_ARTICLE_CACHE, allEntries = true)
   public void refresh() {
     try {
       List<WordEnglishEntity> allWords = serviceWordClient.getAllEnWords().getData();
@@ -43,20 +57,19 @@ public class FunArticleServiceImpl implements FunArticleService {
       Collections.shuffle(allWords);
       List<WordEnglishEntity> picked = allWords.subList(0, Math.min(ARTICLE_COUNT, allWords.size()));
 
-      List<FunArticleDto> articles = new ArrayList<>();
       for (WordEnglishEntity word : picked) {
         try {
           String content = generateArticle(word.getWord());
-          articles.add(new FunArticleDto(word.getWord(), content));
-          log.info("FunArticle: generated article for '{}'", word.getWord());
+          FunArticleEntity entity = new FunArticleEntity();
+          entity.setWord(word.getWord());
+          entity.setContent(content);
+          serviceRecordClient.saveFunArticle(entity);
+          log.info("FunArticle: saved article for '{}'", word.getWord());
         } catch (Exception e) {
           log.error("FunArticle: failed to generate for word '{}': {}", word.getWord(), e.getMessage());
         }
       }
-      if (!articles.isEmpty()) {
-        cachedArticles = articles;
-        log.info("FunArticle: refreshed {} articles", articles.size());
-      }
+      log.info("FunArticle: refresh complete");
     } catch (Exception e) {
       log.error("FunArticle: refresh failed: {}", e.getMessage(), e);
     }
@@ -64,12 +77,18 @@ public class FunArticleServiceImpl implements FunArticleService {
 
   @Override
   public FunArticleDto getLatest() {
-    return cachedArticles.isEmpty() ? null : cachedArticles.get(0);
+    List<FunArticleDto> articles = self.getAll();
+    return articles.isEmpty() ? null : articles.get(0);
   }
 
   @Override
+  @Cacheable(value = CacheConfig.FUN_ARTICLE_CACHE, key = "'all'")
   public List<FunArticleDto> getAll() {
-    return new ArrayList<>(cachedArticles);
+    List<FunArticleEntity> entities = serviceRecordClient.getRandomFunArticles().getData();
+    if (entities == null) return Collections.emptyList();
+    return entities.stream()
+        .map(e -> new FunArticleDto(e.getWord(), e.getContent()))
+        .collect(Collectors.toList());
   }
 
   @SuppressWarnings("unchecked")
