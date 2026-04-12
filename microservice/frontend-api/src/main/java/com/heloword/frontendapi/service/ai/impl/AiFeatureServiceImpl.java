@@ -34,7 +34,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String en = request.getTranslateEn() != null ? request.getTranslateEn() : "";
     String ch = request.getTranslateCh() != null ? request.getTranslateCh() : "";
 
-    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位：\n"
+    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位，若為日文，請在日文例句的漢字旁用括號標注假名：\n"
         + "解釋：（用繁體中文簡短解釋單字的意思，1-2句）\n"
         + langLabel + "例句：（用" + langLabel + "造一個自然的例句）\n"
         + "中文翻譯：（將上面例句翻譯成繁體中文）";
@@ -54,7 +54,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String word = request.getWord();
     String en = request.getTranslateEn() != null ? request.getTranslateEn() : "";
 
-    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位：\n"
+    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位，若為日文，請在日文例句的漢字旁用括號標注假名：\n"
         + langLabel + "例句：（用" + langLabel + "造一個自然的例句）\n"
         + "中文翻譯：（將上面例句翻譯成繁體中文）";
     String user = "單字：" + word + (en.isEmpty() ? "" : "（意思：" + en + "）");

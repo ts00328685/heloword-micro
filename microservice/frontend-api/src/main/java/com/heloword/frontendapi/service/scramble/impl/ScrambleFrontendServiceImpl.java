@@ -76,7 +76,7 @@ public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
     return "你是一位台灣" + langLabel + "老師，我是一位正在學習" + langLabel + "的學生，"
         + "請用簡短的繁體中文bullet point解釋這個" + langLabel + "句子的字詞搭配及文法重點，"
         + "請用繁體中文回覆，並參考中文給出各個字詞搭配的翻譯及句型文法重點，"
-        + "please don't provide any hiragana aside kanji in paranthesis in your answer "
+        + "please provide hiragana aside kanji in parenthesis in your answer if it's japanese "
         + "and reply with Traditional Chinese only!!!";
   }
 }
