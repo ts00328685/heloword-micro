@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
   private static Optional<MemberEntity> memberMapper(String idTokenKey, GoogleIdToken.Payload idToken, MemberEntity entity, Set<RoleEntity> roleEntitys) {
     if (entity != null) {
       entity.setFullname(getClaimString(idToken, "name"));
-      entity.setNickname(getClaimString(idToken, "given_name"));
+      entity.setNickname(Optional.ofNullable(entity.getNickname()).orElse(getClaimString(idToken, "given_name")));
       entity.setPicture(getClaimString(idToken, "picture"));
       entity.setGoogleToken(idToken.getUserId());
       return Optional.of(entity);
