@@ -19,6 +19,8 @@ public interface UserCustomVocabFrontendService {
 
   UserCustomWordDto addWord(UserDto user, Long groupId, UserCustomWordDto dto);
 
+  List<UserCustomWordDto> batchAddWords(UserDto user, Long groupId, List<UserCustomWordDto> dtos);
+
   UserCustomWordDto updateWord(UserDto user, Long wordId, UserCustomWordDto dto);
 
   void deleteWord(UserDto user, Long wordId);

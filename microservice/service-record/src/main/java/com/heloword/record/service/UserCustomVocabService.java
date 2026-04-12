@@ -18,6 +18,8 @@ public interface UserCustomVocabService {
 
   UserCustomWordDto addWord(String username, Long groupId, UserCustomWordDto dto);
 
+  List<UserCustomWordDto> batchAddWords(String username, Long groupId, List<UserCustomWordDto> dtos);
+
   UserCustomWordDto updateWord(String username, Long wordId, UserCustomWordDto dto);
 
   void deleteWord(String username, Long wordId);

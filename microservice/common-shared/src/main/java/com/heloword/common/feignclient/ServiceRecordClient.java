@@ -124,6 +124,9 @@ public interface ServiceRecordClient {
   @PostMapping("/api/custom-vocab/groups/{id}/words")
   HeloResponse<UserCustomWordDto> addCustomWord(@RequestHeader String username, @PathVariable Long id, @RequestBody UserCustomWordDto dto);
 
+  @PostMapping("/api/custom-vocab/groups/{id}/words/batch")
+  HeloResponse<List<UserCustomWordDto>> batchAddCustomWords(@RequestHeader String username, @PathVariable Long id, @RequestBody List<UserCustomWordDto> dtos);
+
   @PutMapping("/api/custom-vocab/words/{wordId}")
   HeloResponse<UserCustomWordDto> updateCustomWord(@RequestHeader String username, @PathVariable Long wordId, @RequestBody UserCustomWordDto dto);
 

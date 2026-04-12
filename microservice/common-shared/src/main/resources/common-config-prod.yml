@@ -11,8 +11,8 @@ feign:
   client:
     config:
       default:
-        connectTimeout: 10000
-        readTimeout: 20000
+        connectTimeout: 20000
+        readTimeout: 120000
   service-user:
     url: http://micro-service-user.default.svc.cluster.local:8001
   service-word:

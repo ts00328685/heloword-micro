@@ -67,6 +67,13 @@ public class UserCustomVocabRestController extends AbstractBaseFrontendRestContr
     return HeloResponse.successWithData(vocabFrontendService.addWord(getUser().get(), id, dto));
   }
 
+  @PostMapping("/groups/{id}/words/batch")
+  public HeloResponse<List<UserCustomWordDto>> batchAddWords(
+      @PathVariable Long id,
+      @RequestBody List<UserCustomWordDto> dtos) {
+    return HeloResponse.successWithData(vocabFrontendService.batchAddWords(getUser().get(), id, dtos));
+  }
+
   @PutMapping("/words/{wordId}")
   public HeloResponse<UserCustomWordDto> updateWord(
       @PathVariable Long wordId,
