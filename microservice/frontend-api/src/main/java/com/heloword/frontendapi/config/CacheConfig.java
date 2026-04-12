@@ -21,13 +21,16 @@ public class CacheConfig {
    * 7-day TTL: vocabulary definitions are stable; large capacity covers top words.
    */
   public static final String AI_CACHE = "aiFeature";
+  /** Random 5 fun-articles from DB, refreshed every hour. */
+  public static final String FUN_ARTICLE_CACHE = "funArticle";
 
   @Bean
   public CacheManager cacheManager() {
     SimpleCacheManager manager = new SimpleCacheManager();
     manager.setCaches(Arrays.asList(
         buildCache(DASHBOARD_CACHE, 24, TimeUnit.HOURS, 1),
-        buildCache(AI_CACHE, 7, TimeUnit.DAYS, 2000)
+        buildCache(AI_CACHE, 7, TimeUnit.DAYS, 2000),
+        buildCache(FUN_ARTICLE_CACHE, 5, TimeUnit.HOURS, 1)
     ));
     return manager;
   }
