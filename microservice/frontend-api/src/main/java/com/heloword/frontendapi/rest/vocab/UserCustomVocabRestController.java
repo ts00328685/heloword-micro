@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import com.heloword.common.model.dto.UserCustomGroupDto;
 import com.heloword.common.model.dto.UserCustomWordDto;
+import com.heloword.frontendapi.service.vocab.PhotoParseService;
 import com.heloword.frontendapi.service.vocab.UserCustomVocabFrontendService;
 import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.BASE_FRONTEND_API_URL;
 
@@ -27,6 +30,7 @@ import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.B
 public class UserCustomVocabRestController extends AbstractBaseFrontendRestController {
 
   private UserCustomVocabFrontendService vocabFrontendService;
+  private PhotoParseService photoParseService;
 
   // ── Groups ────────────────────────────────────────────────────────────────
 
@@ -65,6 +69,12 @@ public class UserCustomVocabRestController extends AbstractBaseFrontendRestContr
       @PathVariable Long id,
       @RequestBody UserCustomWordDto dto) {
     return HeloResponse.successWithData(vocabFrontendService.addWord(getUser().get(), id, dto));
+  }
+
+  @PostMapping("/parse-photo")
+  public HeloResponse<List<UserCustomWordDto>> parsePhoto(
+      @RequestParam("image") MultipartFile image) {
+    return HeloResponse.successWithData(photoParseService.parseWordsFromPhoto(image));
   }
 
   @PostMapping("/groups/{id}/words/batch")
