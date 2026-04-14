@@ -172,6 +172,19 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
     wordRepo.delete(entity);
   }
 
+  @Override
+  @Transactional
+  public void batchDeleteWords(String username, Long groupId, List<Long> wordIds) {
+    if (wordIds == null || wordIds.isEmpty()) return;
+    // Verify the group belongs to this user
+    groupRepo.findByIdAndUsername(groupId, username)
+        .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+    // Only delete words that belong to this user AND this group
+    List<UserCustomWordEntity> entities =
+        wordRepo.findAllByIdInAndUsernameAndGroupId(wordIds, username, groupId);
+    wordRepo.deleteAll(entities);
+  }
+
   // ── Mappers ───────────────────────────────────────────────────────────────
 
   private UserCustomGroupDto toGroupDto(UserCustomGroupEntity e, int wordCount) {

@@ -16,4 +16,6 @@ public interface UserCustomWordRepository extends IBaseRepo<UserCustomWordEntity
   long countByGroupIdAndStatus(Long groupId, Integer status);
 
   void deleteAllByGroupId(Long groupId);
+
+  List<UserCustomWordEntity> findAllByIdInAndUsernameAndGroupId(List<Long> ids, String username, Long groupId);
 }

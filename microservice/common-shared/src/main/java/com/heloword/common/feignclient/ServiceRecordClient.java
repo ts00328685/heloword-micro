@@ -144,6 +144,9 @@ public interface ServiceRecordClient {
   @DeleteMapping("/api/custom-vocab/words/{wordId}")
   HeloResponse<?> deleteCustomWord(@RequestHeader String username, @PathVariable Long wordId);
 
+  @PostMapping("/api/custom-vocab/groups/{id}/words/batch-delete")
+  HeloResponse<?> batchDeleteCustomWords(@RequestHeader String username, @PathVariable Long id, @RequestBody List<Long> wordIds);
+
   // ── Vocab sharing ─────────────────────────────────────────────────────────
 
   @PostMapping("/api/vocab-share")

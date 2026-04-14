@@ -61,4 +61,9 @@ public class UserCustomVocabFrontendServiceImpl implements UserCustomVocabFronte
   public void deleteWord(UserDto user, Long wordId) {
     serviceRecordClient.deleteCustomWord(user.getUsername(), wordId);
   }
+
+  @Override
+  public void batchDeleteWords(UserDto user, Long groupId, List<Long> wordIds) {
+    serviceRecordClient.batchDeleteCustomWords(user.getUsername(), groupId, wordIds);
+  }
 }
