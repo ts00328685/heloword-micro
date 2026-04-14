@@ -96,4 +96,12 @@ public class UserCustomVocabRestController extends AbstractBaseFrontendRestContr
     vocabFrontendService.deleteWord(getUser().get(), wordId);
     return HeloResponse.successWithoutData();
   }
+
+  @PostMapping("/groups/{id}/words/batch-delete")
+  public HeloResponse<?> batchDeleteWords(
+      @PathVariable Long id,
+      @RequestBody List<Long> wordIds) {
+    vocabFrontendService.batchDeleteWords(getUser().get(), id, wordIds);
+    return HeloResponse.successWithoutData();
+  }
 }

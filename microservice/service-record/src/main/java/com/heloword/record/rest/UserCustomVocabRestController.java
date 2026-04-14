@@ -105,4 +105,13 @@ public class UserCustomVocabRestController {
     vocabService.deleteWord(decode(username), wordId);
     return HeloResponse.successWithoutData();
   }
+
+  @PostMapping("/groups/{id}/words/batch-delete")
+  public HeloResponse<?> batchDeleteWords(
+      @RequestHeader String username,
+      @PathVariable Long id,
+      @RequestBody List<Long> wordIds) {
+    vocabService.batchDeleteWords(decode(username), id, wordIds);
+    return HeloResponse.successWithoutData();
+  }
 }

@@ -23,4 +23,6 @@ public interface UserCustomVocabService {
   UserCustomWordDto updateWord(String username, Long wordId, UserCustomWordDto dto);
 
   void deleteWord(String username, Long wordId);
+
+  void batchDeleteWords(String username, Long groupId, List<Long> wordIds);
 }
