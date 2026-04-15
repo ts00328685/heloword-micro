@@ -20,8 +20,8 @@ import com.heloword.frontendapi.service.vocab.PhotoParseService;
 @Service
 public class PhotoParseServiceImpl implements PhotoParseService {
 
-  private static final String LLM_URL = "http://localhost:11434/api/chat";
-  private static final String MODEL = "gemma4:e4b";
+  private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
+  private static final String MODEL = "gemma4:e2b";
 
   private final RestTemplate restTemplate = new RestTemplate();
   private final ObjectMapper objectMapper = new ObjectMapper();
