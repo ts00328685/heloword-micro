@@ -21,7 +21,7 @@ import com.heloword.frontendapi.service.vocab.PhotoParseService;
 public class PhotoParseServiceImpl implements PhotoParseService {
 
   private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:e2b";
+  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
 
   private final RestTemplate restTemplate = new RestTemplate();
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -37,11 +37,11 @@ public class PhotoParseServiceImpl implements PhotoParseService {
           + "Return ONLY a valid JSON array (no markdown, no extra text) where each object has exactly these fields: "
           + "\"word\" (the word or phrase, required), "
           + "\"translateEn\" (English meaning or definition, required — provide one even if not in the image), "
-          + "\"translateCh\" (Chinese translation, empty string if not visible), "
+          + "\"translateCh\" (Traditional Chinese translation, empty string if not visible), "
           + "\"sentence\" (example sentence if visible in the image, otherwise empty string), "
           + "\"phonetics\" (pronunciation guide if visible in the image, otherwise empty string). "
           + "Example: [{\"word\":\"apple\",\"translateEn\":\"a round fruit\","
-          + "\"translateCh\":\"蘋果\",\"sentence\":\"\",\"phonetics\":\"\"}]";
+          + "\"translateCh\":\"蘋果\",\"sentence\":\"an apple a day keeps the doctor away.\",\"phonetics\":\"\"}]";
 
       Map<String, Object> body = Map.of(
           "model", MODEL,

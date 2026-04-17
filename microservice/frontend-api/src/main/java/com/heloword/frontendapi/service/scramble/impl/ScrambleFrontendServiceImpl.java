@@ -17,7 +17,7 @@ import com.heloword.frontendapi.service.scramble.ScrambleFrontendService;
 public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
 
   private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:e2b";
+  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
 
   private final RestTemplate restTemplate = new RestTemplate();
 
