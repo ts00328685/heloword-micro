@@ -28,7 +28,7 @@ import com.heloword.frontendapi.service.funarticle.FunArticleService;
 public class FunArticleServiceImpl implements FunArticleService {
 
   private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:e2b";
+  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
   private static final int ARTICLE_COUNT = 200;
 
   @Autowired
