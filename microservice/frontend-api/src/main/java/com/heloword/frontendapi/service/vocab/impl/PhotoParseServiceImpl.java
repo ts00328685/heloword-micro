@@ -7,6 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -16,32 +17,27 @@ import org.springframework.web.multipart.MultipartFile;
 import com.heloword.common.model.dto.UserCustomWordDto;
 import com.heloword.frontendapi.service.vocab.PhotoParseService;
 
+import java.time.Duration;
+
 @Log4j2
 @Service
 public class PhotoParseServiceImpl implements PhotoParseService {
 
   private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
   private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
+    public static final String MAX_WORDS_EXTRACTED = "5";
 
-  private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = new RestTemplateBuilder()
+      .setReadTimeout(Duration.ofSeconds(30))
+      .build();
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
-  public List<UserCustomWordDto> parseWordsFromPhoto(MultipartFile image) {
+  public List<UserCustomWordDto> parseWordsFromPhoto(MultipartFile image, String lang) {
     try {
       byte[] bytes = image.getBytes();
       String base64 = Base64.getEncoder().encodeToString(bytes);
-
-      String prompt = "You are a vocabulary extraction assistant. "
-          + "Extract ALL vocabulary words or phrases visible in this image. "
-          + "Return ONLY a valid JSON array (no markdown, no extra text) where each object has exactly these fields: "
-          + "\"word\" (the word or phrase, required), "
-          + "\"translateEn\" (English meaning or definition, required — provide one even if not in the image), "
-          + "\"translateCh\" (Traditional Chinese translation, empty string if not visible), "
-          + "\"sentence\" (example sentence if visible in the image, otherwise empty string), "
-          + "\"phonetics\" (pronunciation guide if visible in the image, otherwise empty string). "
-          + "Example: [{\"word\":\"apple\",\"translateEn\":\"a round fruit\","
-          + "\"translateCh\":\"蘋果\",\"sentence\":\"an apple a day keeps the doctor away.\",\"phonetics\":\"\"}]";
+      String prompt = buildPrompt(lang);
 
       Map<String, Object> body = Map.of(
           "model", MODEL,
@@ -74,6 +70,38 @@ public class PhotoParseServiceImpl implements PhotoParseService {
     } catch (Exception e) {
       log.error("Photo parse failed: {}", e.getMessage());
       throw new RuntimeException("Failed to parse photo: " + e.getMessage(), e);
+    }
+  }
+
+  private String buildPrompt(String lang) {
+    String normalizedLang = lang == null ? "EN" : lang.toUpperCase();
+    if ("JA".equals(normalizedLang)) {
+      return "Extract at max " + MAX_WORDS_EXTRACTED + " Japanese words or phrases from this image. "
+          + "Return ONLY a JSON array, no markdown. Each object: "
+          + "\"word\" (Japanese word/phrase), "
+          + "\"translateEn\" (English meaning), "
+          + "\"translateCh\" (Traditional Chinese, empty string if unknown), "
+          + "\"phonetics\" (furigana if visible, otherwise empty string), "
+          + "\"sentence\" (example sentence if visible, otherwise empty string). "
+          + "Example: [{\"word\":\"猫\",\"translateEn\":\"cat\",\"translateCh\":\"貓\",\"phonetics\":\"ねこ\",\"sentence\":\"\"}]";
+    } else if ("ZH".equals(normalizedLang)) {
+      return "Extract at max " + MAX_WORDS_EXTRACTED + " Traditional Chinese words or phrases from this image. "
+          + "Return ONLY a JSON array, no markdown. Each object: "
+          + "\"word\" (Chinese word/phrase), "
+          + "\"translateEn\" (English meaning), "
+          + "\"translateCh\" (same as word), "
+          + "\"phonetics\" (zhuyin or pinyin if visible, otherwise empty string), "
+          + "\"sentence\" (example sentence if visible, otherwise empty string). "
+          + "Example: [{\"word\":\"蘋果\",\"translateEn\":\"apple\",\"translateCh\":\"蘋果\",\"phonetics\":\"\",\"sentence\":\"\"}]";
+    } else {
+      return "Extract at max " + MAX_WORDS_EXTRACTED + " English words or phrases from this image. "
+          + "Return ONLY a JSON array, no markdown. Each object: "
+          + "\"word\" (English word/phrase), "
+          + "\"translateEn\" (definition in English), "
+          + "\"translateCh\" (Traditional Chinese translation), "
+          + "\"phonetics\" (pronunciation if visible, otherwise empty string), "
+          + "\"sentence\" (example sentence if visible, otherwise empty string). "
+          + "Example: [{\"word\":\"apple\",\"translateEn\":\"a round fruit\",\"translateCh\":\"蘋果\",\"phonetics\":\"\",\"sentence\":\"\"}]";
     }
   }
 
@@ -116,14 +144,14 @@ public class PhotoParseServiceImpl implements PhotoParseService {
     }
   }
 
-  /** Extract the first [...] array from a string, handling markdown code fences. */
   private String extractJsonArray(String content) {
     int start = content.indexOf('[');
-    int end = content.lastIndexOf(']');
-    if (start >= 0 && end > start) {
-      return content.substring(start, end + 1);
-    }
-    return null;
+    if (start < 0) return null;
+    // Re-append ']' in case the stop sequence consumed it before emission
+    String trimmed = content.substring(start).stripTrailing();
+    if (!trimmed.endsWith("]")) trimmed = trimmed + "]";
+    int end = trimmed.lastIndexOf(']');
+    return trimmed.substring(0, end + 1);
   }
 
   private String getString(Map<String, Object> map, String key) {
