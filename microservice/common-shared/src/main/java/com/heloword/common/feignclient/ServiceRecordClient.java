@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.heloword.common.base.dto.HeloResponse;
+import com.heloword.common.entity.announcement.OfficialMessageEntity;
 import com.heloword.common.entity.funarticle.FunArticleEntity;
 import com.heloword.common.entity.record.RecordQuizEntity;
 import com.heloword.common.entity.record.RecordQuizGroupOverrideEntity;
@@ -28,6 +29,11 @@ import com.heloword.common.model.dto.VocabShareRequestDto;
 
 @FeignClient(name = "SERVICE-RECORD", url = "${feign.service-record.url:}", configuration = FeignClientInterceptor.class)
 public interface ServiceRecordClient {
+
+  // ── Official Messages ─────────────────────────────────────────────────────
+
+  @GetMapping("/api/official-message/all")
+  HeloResponse<List<OfficialMessageEntity>> getOfficialMessages();
 
   // ── Fun Articles ──────────────────────────────────────────────────────────
 
