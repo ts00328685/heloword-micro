@@ -14,6 +14,8 @@ import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
 import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
+import com.heloword.frontendapi.model.request.ai.WordFillRequest;
+import com.heloword.frontendapi.model.response.WordFillResponse;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
 
 @Log4j2
@@ -134,20 +136,65 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     }
   }
 
+  @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "'fill:' + (#request.wordLang ?: 'en') + ':' + #request.word.toLowerCase()")
+  public WordFillResponse wordFill(WordFillRequest request) {
+    String wordLang = request.getWordLang() != null ? request.getWordLang() : "en";
+    String langLabel = resolveWordLangLabel(wordLang);
+    String word = request.getWord();
+
+    String system = "你是一位語言老師。根據給定的" + langLabel + "單字，嚴格只輸出以下4行，不要任何額外文字或標點：\n"
+        + "MEANING_EN: <簡短英文意思，不超過8個英文單字>\n"
+        + "MEANING_ZH: <簡短繁體中文意思，不超過8個字>\n"
+        + "SENTENCE: <用" + langLabel + "造一個自然的例句，不可使用其他語言>\n"
+        + "SENTENCE_ZH: <將上面例句翻譯成繁體中文>";
+    String user = word;
+
+    String raw = callLlm(system, user);
+    return parseWordFill(raw);
+  }
+
+  private WordFillResponse parseWordFill(String raw) {
+    String translateEn = "";
+    String translateCh = "";
+    String sentence = "";
+    String sentenceZh = "";
+
+    for (String line : raw.split("\n")) {
+      String trimmed = line.trim();
+      if (trimmed.startsWith("MEANING_EN:")) {
+        translateEn = trimmed.substring("MEANING_EN:".length()).trim();
+      } else if (trimmed.startsWith("MEANING_ZH:")) {
+        translateCh = trimmed.substring("MEANING_ZH:".length()).trim();
+      } else if (trimmed.startsWith("SENTENCE_ZH:")) {
+        sentenceZh = trimmed.substring("SENTENCE_ZH:".length()).trim();
+      } else if (trimmed.startsWith("SENTENCE:")) {
+        sentence = trimmed.substring("SENTENCE:".length()).trim();
+      }
+    }
+
+    String combined = sentence;
+    if (!sentenceZh.isEmpty()) {
+      combined = sentence + " " + sentenceZh;
+    }
+    return new WordFillResponse(translateEn, translateCh, combined);
+  }
+
   /** Resolves UI language code (i18n) to a display label. */
   private String resolveLangLabel(String lang) {
-    if ("jp".equals(lang)) return "日文";
-    if ("kr".equals(lang)) return "韓文";
+    if ("ja".equals(lang) || "jp".equals(lang)) return "日文";
+    if ("ko".equals(lang) || "kr".equals(lang)) return "韓文";
     return "英文";
   }
 
   /** Resolves the word's own language code to a display label used in prompts. */
   private String resolveWordLangLabel(String wordLang) {
     if (wordLang == null) return "英文";
-    if ("jp".equals(wordLang)) return "日文";
+    if ("ja".equals(wordLang) || "jp".equals(wordLang)) return "日文";
     if ("de".equals(wordLang)) return "德文";
-    if ("kr".equals(wordLang)) return "韓文";
-    if ("ch".equals(wordLang)) return "中文";
+    if ("ko".equals(wordLang) || "kr".equals(wordLang)) return "韓文";
+    if ("zh".equals(wordLang) || "ch".equals(wordLang)) return "中文";
     return "英文";
   }
 }

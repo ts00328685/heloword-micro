@@ -76,14 +76,14 @@ public class PhotoParseServiceImpl implements PhotoParseService {
   private String buildPrompt(String lang) {
     String normalizedLang = lang == null ? "EN" : lang.toUpperCase();
     if ("JA".equals(normalizedLang)) {
-      return "Extract at max " + MAX_WORDS_EXTRACTED + " Japanese words or phrases from this image. "
+      return "Extract at max " + MAX_WORDS_EXTRACTED + " Japanese words or phrases from this image. if there's kanji, put hiragana in square brackets next to it "
           + "Return ONLY a JSON array, no markdown. Each object: "
           + "\"word\" (Japanese word/phrase), "
           + "\"translateEn\" (English meaning), "
           + "\"translateCh\" (Traditional Chinese, empty string if unknown), "
           + "\"phonetics\" (furigana if visible, otherwise empty string), "
           + "\"sentence\" (example sentence if visible, otherwise empty string). "
-          + "Example: [{\"word\":\"猫\",\"translateEn\":\"cat\",\"translateCh\":\"貓\",\"phonetics\":\"ねこ\",\"sentence\":\"\"}]";
+          + "Example: [{\"word\":\"日本[にほん]へ行[い]く\",\"translateEn\":\"going to Japan\",\"translateCh\":\"去日本\",\"phonetics\":\"\",\"sentence\":\"来年日本へ行く\"}]";
     } else if ("ZH".equals(normalizedLang)) {
       return "Extract at max " + MAX_WORDS_EXTRACTED + " Traditional Chinese words or phrases from this image. "
           + "Return ONLY a JSON array, no markdown. Each object: "
