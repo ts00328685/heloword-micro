@@ -5,5 +5,5 @@ import com.heloword.common.model.dto.UserCustomWordDto;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface PhotoParseService {
-  List<UserCustomWordDto> parseWordsFromPhoto(MultipartFile image);
+  List<UserCustomWordDto> parseWordsFromPhoto(MultipartFile image, String lang);
 }

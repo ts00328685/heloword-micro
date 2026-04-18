@@ -73,8 +73,9 @@ public class UserCustomVocabRestController extends AbstractBaseFrontendRestContr
 
   @PostMapping("/parse-photo")
   public HeloResponse<List<UserCustomWordDto>> parsePhoto(
-      @RequestParam("image") MultipartFile image) {
-    return HeloResponse.successWithData(photoParseService.parseWordsFromPhoto(image));
+      @RequestParam("image") MultipartFile image,
+      @RequestParam(value = "lang", required = false, defaultValue = "EN") String lang) {
+    return HeloResponse.successWithData(photoParseService.parseWordsFromPhoto(image, lang));
   }
 
   @PostMapping("/groups/{id}/words/batch")
