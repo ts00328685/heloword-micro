@@ -13,6 +13,7 @@ import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.B
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
+import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
 
 @Log4j2
@@ -53,6 +54,17 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
   @PostMapping("/study-coach")
   public HeloResponse<?> studyCoach(@RequestBody StudyCoachRequest request) {
     String result = aiFeatureService.studyCoach(request);
+    return HeloResponse.successWithData(result);
+  }
+
+  /**
+   * Synonyms / similar expressions for a word with usage guidance.
+   * Restricted to MEMBER role — frontend shows prompt to guests.
+   */
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/word-compare")
+  public HeloResponse<?> wordCompare(@RequestBody WordCompareRequest request) {
+    String result = aiFeatureService.wordCompare(request);
     return HeloResponse.successWithData(result);
   }
 }
