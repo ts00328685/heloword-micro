@@ -14,6 +14,7 @@ import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
 import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
+import com.heloword.frontendapi.model.request.ai.WordFillRequest;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
 
 @Log4j2
@@ -66,5 +67,16 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
   public HeloResponse<?> wordCompare(@RequestBody WordCompareRequest request) {
     String result = aiFeatureService.wordCompare(request);
     return HeloResponse.successWithData(result);
+  }
+
+  /**
+   * AI fill for custom vocab form — returns structured translateEn/translateCh/sentence,
+   * language-aware based on the group's wordLang.
+   * Restricted to MEMBER role — frontend shows prompt to guests.
+   */
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/word-fill")
+  public HeloResponse<?> wordFill(@RequestBody WordFillRequest request) {
+    return HeloResponse.successWithData(aiFeatureService.wordFill(request));
   }
 }
