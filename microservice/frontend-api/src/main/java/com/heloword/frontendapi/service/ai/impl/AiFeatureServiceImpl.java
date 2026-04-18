@@ -13,6 +13,7 @@ import com.heloword.frontendapi.config.CacheConfig;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
+import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
 
 @Log4j2
@@ -72,6 +73,25 @@ public class AiFeatureServiceImpl implements AiFeatureService {
 
     String system = "你是一位鼓勵學生的" + langLabel + "學習教練。請用繁體中文回覆，給出一句鼓勵的話和一個具體的學習建議，共2句，不要其他內容。";
     String user = "我最近的背單字正確率是" + pct + "%，答錯了" + wrong + "個單字。";
+
+    return callLlm(system, user);
+  }
+
+  @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "'compare:' + (#request.wordLang ?: 'en') + ':' + #request.word.toLowerCase()")
+  public String wordCompare(WordCompareRequest request) {
+    String wordLang = request.getWordLang() != null ? request.getWordLang() : "en";
+    String langLabel = resolveWordLangLabel(wordLang);
+    String word = request.getWord();
+    String en = request.getTranslateEn() != null ? request.getTranslateEn() : "";
+    String ch = request.getTranslateCh() != null ? request.getTranslateCh() : "";
+
+    String system = "你是一位" + langLabel + "老師。請用繁體中文，在3句以內說明「" + word
+        + "」有哪些近義詞或相似說法，以及各自適合使用的情境，回覆要簡潔。";
+    String user = "單字：" + word
+        + (en.isEmpty() ? "" : "（英文意思：" + en + "）")
+        + (ch.isEmpty() ? "" : "（中文意思：" + ch + "）");
 
     return callLlm(system, user);
   }
