@@ -16,6 +16,7 @@ import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
 import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
 import com.heloword.frontendapi.model.request.ai.WordFillRequest;
+import com.heloword.frontendapi.model.request.ai.VerbConjugationRequest;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
 
 @Log4j2
@@ -89,5 +90,15 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
   @PostMapping("/quick-translate")
   public HeloResponse<?> quickTranslate(@RequestBody QuickTranslateRequest request) {
     return HeloResponse.successWithData(aiFeatureService.quickTranslate(request));
+  }
+
+  /**
+   * Returns verb conjugation table for English or Japanese verbs.
+   * Returns error if the input is not a verb.
+   */
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/verb-conjugation")
+  public HeloResponse<?> verbConjugation(@RequestBody VerbConjugationRequest request) {
+    return HeloResponse.successWithData(aiFeatureService.verbConjugation(request));
   }
 }

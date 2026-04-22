@@ -16,9 +16,13 @@ import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
 import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
 import com.heloword.frontendapi.model.request.ai.WordFillRequest;
+import com.heloword.frontendapi.model.request.ai.VerbConjugationRequest;
 import com.heloword.frontendapi.model.response.QuickTranslateResponse;
 import com.heloword.frontendapi.model.response.WordFillResponse;
+import com.heloword.frontendapi.model.response.VerbConjugationResponse;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
+import com.heloword.common.exception.HeloServiceException;
+import com.heloword.common.type.ResponseCode;
 
 @Log4j2
 @Service
@@ -216,6 +220,68 @@ public class AiFeatureServiceImpl implements AiFeatureService {
       combined = sentence + " " + sentenceZh;
     }
     return new WordFillResponse(translateEn, translateCh, combined);
+  }
+
+  @Override
+  @Cacheable(value = CacheConfig.AI_CACHE, key = "'verbconj:' + #request.word.toLowerCase()")
+  public VerbConjugationResponse verbConjugation(VerbConjugationRequest request) {
+    String word = request.getWord() != null ? request.getWord().trim() : "";
+
+    String system = "You are a verb conjugation assistant. Auto-detect if the input is an English verb or Japanese verb.\n"
+        + "Output EXACTLY the following lines with NO extra text:\n"
+        + "LANG: <en|jp>\n"
+        + "WORD: <base form; if Japanese annotate kanji with hiragana in brackets e.g. 食[た]べる>\n"
+        + "MEANING_EN: <English meaning, max 6 words>\n"
+        + "MEANING_ZH: <繁體中文意思，最多6字>\n"
+        + "If LANG is en, output these 3 lines:\n"
+        + "BASE: <base form>\n"
+        + "PAST: <simple past>\n"
+        + "PAST_PART: <past participle>\n"
+        + "If LANG is jp, output these 10 lines:\n"
+        + "辞書形: <dictionary form>\n"
+        + "ます形: <masu form>\n"
+        + "ない形: <nai form>\n"
+        + "て形: <te form>\n"
+        + "た形: <ta form>\n"
+        + "可能形: <potential form>\n"
+        + "意向形: <volitional form>\n"
+        + "命令形: <imperative form>\n"
+        + "被動形: <passive form>\n"
+        + "使役形: <causative form>\n"
+        + "If the input is NOT a verb at all, output exactly: ERROR: not_a_verb";
+    String raw = callLlm(system, word);
+    return parseVerbConjugation(raw, word);
+  }
+
+  private VerbConjugationResponse parseVerbConjugation(String raw, String fallbackWord) {
+    if (raw.contains("ERROR: not_a_verb")) {
+      throw HeloServiceException.of(ResponseCode.NOT_A_VERB);
+    }
+
+    String lang = "en";
+    String parsedWord = fallbackWord;
+    String meaningEn = "";
+    String meaningZh = "";
+    StringBuilder conj = new StringBuilder();
+
+    for (String line : raw.split("\n")) {
+      String t = line.trim();
+      if (t.startsWith("LANG:")) { lang = t.substring(5).trim().toLowerCase(); }
+      else if (t.startsWith("WORD:")) { parsedWord = t.substring(5).trim(); }
+      else if (t.startsWith("MEANING_EN:")) { meaningEn = t.substring(11).trim(); }
+      else if (t.startsWith("MEANING_ZH:")) { meaningZh = t.substring(11).trim(); }
+      else if (t.startsWith("BASE:") || t.startsWith("PAST_PART:") || t.startsWith("PAST:")) {
+        conj.append(t).append("\n");
+      } else if (t.startsWith("辞書形:") || t.startsWith("ます形:") || t.startsWith("ない形:")
+          || t.startsWith("て形:") || t.startsWith("た形:") || t.startsWith("可能形:")
+          || t.startsWith("意向形:") || t.startsWith("命令形:") || t.startsWith("被動形:")
+          || t.startsWith("使役形:")) {
+        conj.append(t).append("\n");
+      }
+    }
+
+    if (lang.equals("ja")) lang = "jp";
+    return new VerbConjugationResponse(parsedWord, lang, meaningEn, meaningZh, conj.toString().trim());
   }
 
   /** Resolves UI language code (i18n) to a display label. */
