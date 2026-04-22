@@ -10,11 +10,13 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.heloword.frontendapi.config.CacheConfig;
+import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
 import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
 import com.heloword.frontendapi.model.request.ai.WordFillRequest;
+import com.heloword.frontendapi.model.response.QuickTranslateResponse;
 import com.heloword.frontendapi.model.response.WordFillResponse;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
 
@@ -96,6 +98,41 @@ public class AiFeatureServiceImpl implements AiFeatureService {
         + (ch.isEmpty() ? "" : "（中文意思：" + ch + "）");
 
     return callLlm(system, user);
+  }
+
+  @Override
+  @Cacheable(value = CacheConfig.AI_CACHE, key = "'qtrans2:' + #request.text.toLowerCase()")
+  public QuickTranslateResponse quickTranslate(QuickTranslateRequest request) {
+    String text = request.getText() != null ? request.getText().trim() : "";
+
+    String system = "Language detector and translator. Output exactly 4 lines, no extra text:\n"
+        + "LANG: <en|de|jp|ch>\n"
+        + "WORD: <if Japanese, annotate each kanji immediately with its hiragana reading in square brackets, e.g. 組[く]み合[あ]わせる; otherwise output original text unchanged>\n"
+        + "EN: <English meaning, max 6 words>\n"
+        + "ZH: <繁體中文意思，最多6字>";
+    String raw = callLlm(system, text);
+    return parseQuickTranslate(raw, text);
+  }
+
+  private QuickTranslateResponse parseQuickTranslate(String raw, String fallbackText) {
+    String lang = "en";
+    String word = fallbackText;
+    String en = "";
+    String zh = "";
+
+    for (String line : raw.split("\n")) {
+      String t = line.trim();
+      if (t.startsWith("LANG:")) lang = t.substring(5).trim().toLowerCase();
+      else if (t.startsWith("WORD:")) word = t.substring(5).trim();
+      else if (t.startsWith("EN:")) en = t.substring(3).trim();
+      else if (t.startsWith("ZH:")) zh = t.substring(3).trim();
+    }
+
+    // Normalise lang code to match frontend TTS_LANG_MAP keys
+    if (lang.equals("ja")) lang = "jp";
+    if (lang.equals("zh")) lang = "ch";
+
+    return new QuickTranslateResponse(word, lang, en, zh);
   }
 
   private String callLlm(String system, String userContent) {

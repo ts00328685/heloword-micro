@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.BASE_FRONTEND_API_URL;
+import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
@@ -78,5 +79,15 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
   @PostMapping("/word-fill")
   public HeloResponse<?> wordFill(@RequestBody WordFillRequest request) {
     return HeloResponse.successWithData(aiFeatureService.wordFill(request));
+  }
+
+  /**
+   * Auto-detects language and returns a quick translation.
+   * Ultra-slim prompt — optimised for speed over richness.
+   */
+  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PostMapping("/quick-translate")
+  public HeloResponse<?> quickTranslate(@RequestBody QuickTranslateRequest request) {
+    return HeloResponse.successWithData(aiFeatureService.quickTranslate(request));
   }
 }

@@ -4,7 +4,9 @@ import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
 import com.heloword.frontendapi.model.request.ai.WordCompareRequest;
+import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.WordFillRequest;
+import com.heloword.frontendapi.model.response.QuickTranslateResponse;
 import com.heloword.frontendapi.model.response.WordFillResponse;
 
 public interface AiFeatureService {
@@ -13,4 +15,5 @@ public interface AiFeatureService {
   String studyCoach(StudyCoachRequest request);
   String wordCompare(WordCompareRequest request);
   WordFillResponse wordFill(WordFillRequest request);
+  QuickTranslateResponse quickTranslate(QuickTranslateRequest request);
 }
