@@ -88,6 +88,7 @@ public class AuthRestController {
       cookie.setHttpOnly(true);
       cookie.setPath(COOKIE_PATH);
       cookie.setSecure(!Util.isLocalEnv(environment));
+      cookie.setMaxAge(86400); // 1 day
       response.addCookie(cookie);
 
       return HeloResponse.successWithData(UserDto.fromEntity(existingMember));
