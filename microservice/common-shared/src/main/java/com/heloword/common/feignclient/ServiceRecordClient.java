@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.entity.announcement.OfficialMessageEntity;
+import com.heloword.common.entity.article.ArticleCrawlerEntity;
 import com.heloword.common.entity.record.DailyGoalProgressEntity;
 import com.heloword.common.entity.funarticle.FunArticleEntity;
 import com.heloword.common.entity.record.RecordQuizEntity;
@@ -40,6 +41,14 @@ public interface ServiceRecordClient {
 
   @GetMapping("/api/official-message/all")
   HeloResponse<List<OfficialMessageEntity>> getOfficialMessages();
+
+  // ── NHK Article Crawler ───────────────────────────────────────────────────
+
+  @GetMapping("/api/article-crawler/list")
+  HeloResponse<List<ArticleCrawlerEntity>> getNhkArticleList();
+
+  @GetMapping("/api/article-crawler/{id}")
+  HeloResponse<ArticleCrawlerEntity> getNhkArticleById(@PathVariable Long id);
 
   // ── Fun Articles ──────────────────────────────────────────────────────────
 
