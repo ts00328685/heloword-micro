@@ -12,3 +12,8 @@ logging:
   level:
     org.springframework.*: debug
     com.heloword.*: debug
+
+helo:
+  llm:
+    url: ${HELO_LLM_URL}
+    model: gemma4:26b-a4b-it-q4_K_M

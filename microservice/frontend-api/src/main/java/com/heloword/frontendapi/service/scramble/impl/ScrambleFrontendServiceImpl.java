@@ -3,12 +3,13 @@ package com.heloword.frontendapi.service.scramble.impl;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.ScrambleAiRequest;
 import com.heloword.frontendapi.service.scramble.ScrambleFrontendService;
 
@@ -16,8 +17,8 @@ import com.heloword.frontendapi.service.scramble.ScrambleFrontendService;
 @Service
 public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
 
-  private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
+  @Autowired
+  private LLMProperties llmProperties;
 
   private final RestTemplate restTemplate = new RestTemplate();
 
@@ -28,7 +29,7 @@ public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
     String userContent = request.getSentence() + "（中文翻譯：" + request.getTranslation() + "）";
 
     Map<String, Object> body = Map.of(
-        "model", MODEL,
+        "model", llmProperties.getModel(),
         "messages", List.of(
             Map.of("role", "system", "content", system),
             Map.of("role", "user", "content", userContent)
@@ -49,7 +50,7 @@ public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
     try {
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
       @SuppressWarnings("unchecked")
-      Map<String, Object> response = restTemplate.postForObject(LLM_URL, entity, Map.class);
+      Map<String, Object> response = restTemplate.postForObject(llmProperties.getUrl(), entity, Map.class);
       if (response == null) return "查無內容";
 
       // Try message.content path first (Ollama chat format)
