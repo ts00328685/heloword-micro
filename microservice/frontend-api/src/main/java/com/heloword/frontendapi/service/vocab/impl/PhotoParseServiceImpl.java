@@ -11,10 +11,12 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import com.heloword.common.model.dto.UserCustomWordDto;
+import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.service.vocab.PhotoParseService;
 
 import java.time.Duration;
@@ -23,9 +25,10 @@ import java.time.Duration;
 @Service
 public class PhotoParseServiceImpl implements PhotoParseService {
 
-  private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
-    public static final String MAX_WORDS_EXTRACTED = "5";
+  public static final String MAX_WORDS_EXTRACTED = "5";
+
+  @Autowired
+  private LLMProperties llmProperties;
 
     private final RestTemplate restTemplate = new RestTemplateBuilder()
       .setReadTimeout(Duration.ofSeconds(30))
@@ -40,7 +43,7 @@ public class PhotoParseServiceImpl implements PhotoParseService {
       String prompt = buildPrompt(lang);
 
       Map<String, Object> body = Map.of(
-          "model", MODEL,
+          "model", llmProperties.getModel(),
           "messages", List.of(
               Map.of(
                   "role", "user",
@@ -60,7 +63,7 @@ public class PhotoParseServiceImpl implements PhotoParseService {
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
       @SuppressWarnings("unchecked")
-      Map<String, Object> response = restTemplate.postForObject(LLM_URL, entity, Map.class);
+      Map<String, Object> response = restTemplate.postForObject(llmProperties.getUrl(), entity, Map.class);
       if (response == null) return List.of();
 
       String content = extractContent(response);

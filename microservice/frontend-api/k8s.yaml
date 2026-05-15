@@ -19,9 +19,28 @@ spec:
       - image: ts00328685/heloword-${APP_NAME}:${MAJOR_VERSION}.${MINOR_VERSION}
         name: ${APP_NAME}
         resources: {}
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 7001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 7001
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          failureThreshold: 3
         env:
           - name: TZ
             value: Asia/Taipei
+          - name: HELO_LLM_URL
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: HELO_LLM_URL
           - name: HELO_DB_USERNAME
             valueFrom:
               secretKeyRef:

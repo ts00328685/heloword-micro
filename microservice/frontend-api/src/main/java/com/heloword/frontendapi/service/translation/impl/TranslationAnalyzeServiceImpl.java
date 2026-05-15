@@ -6,8 +6,10 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.TranslationAnalyzeRequest;
 import com.heloword.frontendapi.service.translation.TranslationAnalyzeService;
 
@@ -15,8 +17,8 @@ import com.heloword.frontendapi.service.translation.TranslationAnalyzeService;
 @Service
 public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService {
 
-  private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
+  @Autowired
+  private LLMProperties llmProperties;
 
   private final RestTemplate restTemplate = new RestTemplate();
 
@@ -27,7 +29,7 @@ public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService 
     String userContent = buildUserContent(request);
 
     Map<String, Object> body = Map.of(
-        "model", MODEL,
+        "model", llmProperties.getModel(),
         "messages", List.of(
             Map.of("role", "system", "content", system),
             Map.of("role", "user", "content", userContent)
@@ -44,7 +46,7 @@ public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService 
     try {
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
       @SuppressWarnings("unchecked")
-      Map<String, Object> response = restTemplate.postForObject(LLM_URL, entity, Map.class);
+      Map<String, Object> response = restTemplate.postForObject(llmProperties.getUrl(), entity, Map.class);
       if (response == null) return "查無內容";
 
       Object message = response.get("message");

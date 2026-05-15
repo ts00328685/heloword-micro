@@ -12,6 +12,10 @@ spring:
           enabled: true
           lower-case-service-id: true
 
+eureka:
+  client:
+    registry-fetch-interval-seconds: 5
+
 logging:
   level:
     com.springframework.*: debug

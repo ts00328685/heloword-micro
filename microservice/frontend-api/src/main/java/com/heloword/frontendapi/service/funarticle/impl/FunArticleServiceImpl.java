@@ -20,6 +20,7 @@ import com.heloword.common.entity.word.WordEnglishEntity;
 import com.heloword.common.feignclient.ServiceRecordClient;
 import com.heloword.common.feignclient.ServiceWordClient;
 import com.heloword.frontendapi.config.CacheConfig;
+import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.response.FunArticleDto;
 import com.heloword.frontendapi.service.funarticle.FunArticleService;
 
@@ -27,9 +28,10 @@ import com.heloword.frontendapi.service.funarticle.FunArticleService;
 @Service
 public class FunArticleServiceImpl implements FunArticleService {
 
-  private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
   private static final int ARTICLE_COUNT = 200;
+
+  @Autowired
+  private LLMProperties llmProperties;
 
   @Autowired
   private ServiceWordClient serviceWordClient;
@@ -114,7 +116,7 @@ public class FunArticleServiceImpl implements FunArticleService {
         + "Follow this format exactly. Do not skip any section.";
 
     Map<String, Object> body = Map.of(
-        "model", MODEL,
+        "model", llmProperties.getModel(),
         "messages", List.of(
             Map.of("role", "system", "content", system),
             Map.of("role", "user", "content", user)
@@ -129,7 +131,7 @@ public class FunArticleServiceImpl implements FunArticleService {
     headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
     Map<String, Object> response = restTemplate.postForObject(
-        LLM_URL, new HttpEntity<>(body, headers), Map.class);
+        llmProperties.getUrl(), new HttpEntity<>(body, headers), Map.class);
     if (response == null) throw new RuntimeException("empty LLM response");
 
     Object message = response.get("message");

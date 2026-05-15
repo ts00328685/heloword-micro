@@ -3,6 +3,7 @@ package com.heloword.frontendapi.service.ai.impl;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.heloword.frontendapi.config.CacheConfig;
+import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
@@ -28,8 +30,8 @@ import com.heloword.common.type.ResponseCode;
 @Service
 public class AiFeatureServiceImpl implements AiFeatureService {
 
-  private static final String LLM_URL = "https://tunnel.heloword.com/api/chat";
-  private static final String MODEL = "gemma4:26b-a4b-it-q4_K_M";
+  @Autowired
+  private LLMProperties llmProperties;
 
   private final RestTemplate restTemplate = new RestTemplate();
 
@@ -141,7 +143,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
 
   private String callLlm(String system, String userContent) {
     Map<String, Object> body = Map.of(
-        "model", MODEL,
+        "model", llmProperties.getModel(),
         "messages", List.of(
             Map.of("role", "system", "content", system),
             Map.of("role", "user", "content", userContent)
@@ -158,7 +160,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     try {
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
       @SuppressWarnings("unchecked")
-      Map<String, Object> response = restTemplate.postForObject(LLM_URL, entity, Map.class);
+      Map<String, Object> response = restTemplate.postForObject(llmProperties.getUrl(), entity, Map.class);
       if (response == null) return "查無內容";
 
       Object message = response.get("message");
