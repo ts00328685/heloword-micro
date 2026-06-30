@@ -13,7 +13,7 @@ public interface BoardFrontendService {
 
   List<LiveBoardSessionDto> getSessions();
 
-  LiveBoardSnapshotDto getSnapshot(Long sessionId);
+  LiveBoardSnapshotDto getSnapshot(Long sessionId, String userId);
 
   LiveBoardSessionDto createSession(String name, String creatorUuid, String creatorName);
 
@@ -29,6 +29,9 @@ public interface BoardFrontendService {
 
   LiveBoardMessageDto deleteMessage(Long messageId);
 
+  /** Toggle the caller's like on a message; broadcasts the new count. */
+  LiveBoardMessageDto toggleLike(Long sessionId, Long messageId, String userId);
+
   List<String> mute(Long sessionId, LiveBoardMuteDto dto);
 
   List<String> unmute(Long sessionId, String userId);
@@ -36,6 +39,8 @@ public interface BoardFrontendService {
   List<LiveBoardSongDto> addSong(Long sessionId, LiveBoardSongDto dto);
 
   List<LiveBoardSongDto> toggleSong(Long sessionId, Long songId, String action);
+
+  List<LiveBoardSongDto> deleteSong(Long sessionId, Long songId);
 
   /** Record a viewer heartbeat; returns the current live viewer count. */
   int presence(Long sessionId, String userId);

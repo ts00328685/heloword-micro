@@ -41,8 +41,8 @@ public class BoardRestController {
   }
 
   @GetMapping("/sessions/{id}")
-  public HeloResponse<?> getSnapshot(@PathVariable Long id) {
-    return HeloResponse.successWithData(boardService.getSnapshot(id));
+  public HeloResponse<?> getSnapshot(@PathVariable Long id, @RequestParam(required = false) String userId) {
+    return HeloResponse.successWithData(boardService.getSnapshot(id, userId));
   }
 
   @PostMapping("/sessions/{id}/end")
@@ -63,6 +63,11 @@ public class BoardRestController {
   @DeleteMapping("/messages/{messageId}")
   public HeloResponse<?> deleteMessage(@PathVariable Long messageId) {
     return HeloResponse.successWithData(boardService.deleteMessage(messageId));
+  }
+
+  @PostMapping("/messages/{messageId}/like")
+  public HeloResponse<?> toggleLike(@PathVariable Long messageId, @RequestParam String userId) {
+    return HeloResponse.successWithData(boardService.toggleLike(messageId, userId));
   }
 
   @GetMapping("/sessions/{id}/muted/{userId}")
@@ -93,5 +98,10 @@ public class BoardRestController {
   @PostMapping("/songs/{songId}/toggle")
   public HeloResponse<?> toggleSong(@PathVariable Long songId, @RequestParam String action) {
     return HeloResponse.successWithData(boardService.toggleSong(songId, action));
+  }
+
+  @DeleteMapping("/songs/{songId}")
+  public HeloResponse<?> deleteSong(@PathVariable Long songId) {
+    return HeloResponse.successWithData(boardService.deleteSong(songId));
   }
 }

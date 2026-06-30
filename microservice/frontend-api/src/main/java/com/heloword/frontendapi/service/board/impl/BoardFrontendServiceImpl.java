@@ -44,8 +44,8 @@ public class BoardFrontendServiceImpl implements BoardFrontendService {
   }
 
   @Override
-  public LiveBoardSnapshotDto getSnapshot(Long sessionId) {
-    return serviceRecordClient.getBoardSnapshot(sessionId).getData();
+  public LiveBoardSnapshotDto getSnapshot(Long sessionId, String userId) {
+    return serviceRecordClient.getBoardSnapshot(sessionId, userId).getData();
   }
 
   @Override
@@ -113,6 +113,16 @@ public class BoardFrontendServiceImpl implements BoardFrontendService {
   }
 
   @Override
+  public LiveBoardMessageDto toggleLike(Long sessionId, Long messageId, String userId) {
+    LiveBoardMessageDto result = serviceRecordClient.toggleBoardMessageLike(messageId, userId).getData();
+    if (result != null) {
+      boardPushService.sendEvent(sessionId, LiveBoardEventDto.builder()
+          .type("LIKE").sessionId(sessionId).messageId(messageId).likeCount(result.getLikeCount()).build());
+    }
+    return result;
+  }
+
+  @Override
   public List<String> mute(Long sessionId, LiveBoardMuteDto dto) {
     List<String> muted = serviceRecordClient.muteBoardUser(sessionId, dto).getData();
     boardPushService.sendEvent(sessionId, LiveBoardEventDto.builder()
@@ -138,6 +148,13 @@ public class BoardFrontendServiceImpl implements BoardFrontendService {
   @Override
   public List<LiveBoardSongDto> toggleSong(Long sessionId, Long songId, String action) {
     List<LiveBoardSongDto> songs = serviceRecordClient.toggleBoardSong(songId, action).getData();
+    boardPushService.sendSongs(sessionId, songs);
+    return songs;
+  }
+
+  @Override
+  public List<LiveBoardSongDto> deleteSong(Long sessionId, Long songId) {
+    List<LiveBoardSongDto> songs = serviceRecordClient.deleteBoardSong(songId).getData();
     boardPushService.sendSongs(sessionId, songs);
     return songs;
   }

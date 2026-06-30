@@ -13,4 +13,6 @@ public class LiveBoardSnapshotDto {
   private List<LiveBoardMessageDto> messages;
   private List<LiveBoardSongDto> songs;
   private List<String> mutedUserIds;
+  /** Message ids the requesting user has liked. */
+  private List<Long> likedMessageIds;
 }

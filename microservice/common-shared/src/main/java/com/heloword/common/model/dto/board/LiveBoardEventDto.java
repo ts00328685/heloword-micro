@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * A control/event broadcast on /topic/board/{sessionId}/events.
- * type ∈ { DELETE, MUTE, UNMUTE, SESSION_ENDED, SESSION_RESTARTED, PRESENCE }.
+ * type ∈ { DELETE, MUTE, UNMUTE, SESSION_ENDED, SESSION_RESTARTED, PRESENCE, LIKE }.
  * Only UUID-based ids + display names are ever included.
  */
 @Data
@@ -25,4 +25,6 @@ public class LiveBoardEventDto {
   private String userName;
   /** PRESENCE: current live viewer count. */
   private Integer presence;
+  /** LIKE: the message's new total like count. */
+  private Integer likeCount;
 }

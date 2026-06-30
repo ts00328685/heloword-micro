@@ -236,7 +236,7 @@ public interface ServiceRecordClient {
   HeloResponse<LiveBoardSessionDto> getActiveBoardSession();
 
   @GetMapping("/api/board/sessions/{id}")
-  HeloResponse<LiveBoardSnapshotDto> getBoardSnapshot(@PathVariable Long id);
+  HeloResponse<LiveBoardSnapshotDto> getBoardSnapshot(@PathVariable Long id, @RequestParam(required = false) String userId);
 
   @PostMapping("/api/board/sessions/{id}/end")
   HeloResponse<LiveBoardSessionDto> endBoardSession(@PathVariable Long id);
@@ -249,6 +249,9 @@ public interface ServiceRecordClient {
 
   @DeleteMapping("/api/board/messages/{messageId}")
   HeloResponse<LiveBoardMessageDto> deleteBoardMessage(@PathVariable Long messageId);
+
+  @PostMapping("/api/board/messages/{messageId}/like")
+  HeloResponse<LiveBoardMessageDto> toggleBoardMessageLike(@PathVariable Long messageId, @RequestParam String userId);
 
   @GetMapping("/api/board/sessions/{id}/muted/{userId}")
   HeloResponse<Boolean> isBoardUserMuted(@PathVariable Long id, @PathVariable String userId);
@@ -267,5 +270,8 @@ public interface ServiceRecordClient {
 
   @PostMapping("/api/board/songs/{songId}/toggle")
   HeloResponse<List<LiveBoardSongDto>> toggleBoardSong(@PathVariable Long songId, @RequestParam String action);
+
+  @DeleteMapping("/api/board/songs/{songId}")
+  HeloResponse<List<LiveBoardSongDto>> deleteBoardSong(@PathVariable Long songId);
 
 }

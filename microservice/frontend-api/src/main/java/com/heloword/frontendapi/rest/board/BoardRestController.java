@@ -4,6 +4,8 @@ import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
@@ -37,8 +39,19 @@ public class BoardRestController extends AbstractBaseFrontendRestController {
   }
 
   @GetMapping("/sessions/{id}")
-  public HeloResponse<?> getSnapshot(@PathVariable Long id) {
-    return HeloResponse.successWithData(boardFrontendService.getSnapshot(id));
+  public HeloResponse<?> getSnapshot(@PathVariable Long id, @RequestParam(required = false) String userId) {
+    // Member UUID wins; guests pass their guest UUID as the query param.
+    return HeloResponse.successWithData(boardFrontendService.getSnapshot(id, resolveUserId(userId)));
+  }
+
+  @PostMapping("/sessions/{id}/messages/{messageId}/like")
+  public HeloResponse<?> toggleLike(@PathVariable Long id, @PathVariable Long messageId,
+      @RequestBody(required = false) LiveBoardMessageDto body) {
+    String userId = resolveUserId(body == null ? null : body.getAuthorUserId());
+    if (userId == null || userId.isEmpty()) {
+      return fail("Missing user.");
+    }
+    return HeloResponse.successWithData(boardFrontendService.toggleLike(id, messageId, userId));
   }
 
   @PostMapping("/sessions/{id}/messages")
@@ -65,6 +78,10 @@ public class BoardRestController extends AbstractBaseFrontendRestController {
   @PostMapping("/sessions/{id}/songs/{songId}/toggle")
   public HeloResponse<?> toggleSong(@PathVariable Long id, @PathVariable Long songId,
       @RequestParam(defaultValue = "sung") String action) {
+    // Only "request" is open to the audience; "sung"/"performing" are host-only.
+    if (!"request".equals(action) && !isAdmin()) {
+      return fail(ResponseCode.INSUFFICIENT_AUTHORITY);
+    }
     return HeloResponse.successWithData(boardFrontendService.toggleSong(id, songId, action));
   }
 
@@ -146,7 +163,20 @@ public class BoardRestController extends AbstractBaseFrontendRestController {
     return HeloResponse.successWithData(boardFrontendService.addSong(id, body));
   }
 
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @DeleteMapping("/sessions/{id}/songs/{songId}")
+  public HeloResponse<?> deleteSong(@PathVariable Long id, @PathVariable Long songId) {
+    return HeloResponse.successWithData(boardFrontendService.deleteSong(id, songId));
+  }
+
   // ── identity helpers (UUID-only) ────────────────────────────────────────────
+
+  /** True if the current request is authenticated as an ADMIN. */
+  private boolean isAdmin() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    return auth != null && auth.getAuthorities().stream()
+        .anyMatch(a -> "ADMIN".equals(a.getAuthority()));
+  }
 
   /**
    * Resolve the author identity. For a logged-in member, the UUID + nickname from the

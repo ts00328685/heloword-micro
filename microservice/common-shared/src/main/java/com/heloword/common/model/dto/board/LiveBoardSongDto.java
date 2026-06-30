@@ -9,6 +9,7 @@ public class LiveBoardSongDto {
   private Long sessionId;
   private String title;
   private Boolean sung;
+  private Boolean performing;
   private Integer requestCount;
   private Integer sortOrder;
 
@@ -19,6 +20,7 @@ public class LiveBoardSongDto {
     dto.setSessionId(e.getSessionId());
     dto.setTitle(e.getTitle());
     dto.setSung(Boolean.TRUE.equals(e.getSung()));
+    dto.setPerforming(Boolean.TRUE.equals(e.getPerforming()));
     dto.setRequestCount(e.getRequestCount() == null ? 0 : e.getRequestCount());
     dto.setSortOrder(e.getSortOrder() == null ? 0 : e.getSortOrder());
     return dto;

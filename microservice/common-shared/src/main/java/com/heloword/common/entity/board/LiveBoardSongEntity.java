@@ -27,6 +27,9 @@ public class LiveBoardSongEntity extends BaseEntity {
   /** Whether this song has been sung. */
   private Boolean sung;
 
+  /** Whether this song is being performed right now (typically one at a time). */
+  private Boolean performing;
+
   /** How many times the audience has requested this song. */
   private Integer requestCount;
 

@@ -15,7 +15,7 @@ public interface BoardService {
 
   LiveBoardSessionDto getActiveSession();
 
-  LiveBoardSnapshotDto getSnapshot(Long sessionId);
+  LiveBoardSnapshotDto getSnapshot(Long sessionId, String userId);
 
   LiveBoardSessionDto endSession(Long sessionId);
 
@@ -24,6 +24,8 @@ public interface BoardService {
   LiveBoardMessageDto addMessage(Long sessionId, LiveBoardMessageDto dto);
 
   LiveBoardMessageDto deleteMessage(Long messageId);
+
+  LiveBoardMessageDto toggleLike(Long messageId, String userId);
 
   boolean isMuted(Long sessionId, String userId);
 
@@ -36,4 +38,6 @@ public interface BoardService {
   List<LiveBoardSongDto> addSong(Long sessionId, LiveBoardSongDto dto);
 
   List<LiveBoardSongDto> toggleSong(Long songId, String action);
+
+  List<LiveBoardSongDto> deleteSong(Long songId);
 }
