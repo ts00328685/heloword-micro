@@ -28,6 +28,11 @@ import com.heloword.common.model.dto.SharedVocabGroupDto;
 import com.heloword.common.model.dto.UserCustomGroupDto;
 import com.heloword.common.model.dto.UserCustomWordDto;
 import com.heloword.common.model.dto.VocabShareRequestDto;
+import com.heloword.common.model.dto.board.LiveBoardMessageDto;
+import com.heloword.common.model.dto.board.LiveBoardMuteDto;
+import com.heloword.common.model.dto.board.LiveBoardSessionDto;
+import com.heloword.common.model.dto.board.LiveBoardSnapshotDto;
+import com.heloword.common.model.dto.board.LiveBoardSongDto;
 
 @FeignClient(name = "SERVICE-RECORD", url = "${feign.service-record.url:}", configuration = FeignClientInterceptor.class)
 public interface ServiceRecordClient {
@@ -218,5 +223,49 @@ public interface ServiceRecordClient {
   HeloResponse<UserCustomGroupDto> copySharedGroup(
       @RequestHeader String username,
       @PathVariable Long shareId);
+
+  // ── Live Board ────────────────────────────────────────────────────────────
+
+  @PostMapping("/api/board/sessions")
+  HeloResponse<LiveBoardSessionDto> createBoardSession(@RequestBody LiveBoardSessionDto dto);
+
+  @GetMapping("/api/board/sessions")
+  HeloResponse<List<LiveBoardSessionDto>> getBoardSessions();
+
+  @GetMapping("/api/board/sessions/active")
+  HeloResponse<LiveBoardSessionDto> getActiveBoardSession();
+
+  @GetMapping("/api/board/sessions/{id}")
+  HeloResponse<LiveBoardSnapshotDto> getBoardSnapshot(@PathVariable Long id);
+
+  @PostMapping("/api/board/sessions/{id}/end")
+  HeloResponse<LiveBoardSessionDto> endBoardSession(@PathVariable Long id);
+
+  @PostMapping("/api/board/sessions/{id}/restart")
+  HeloResponse<LiveBoardSessionDto> restartBoardSession(@PathVariable Long id);
+
+  @PostMapping("/api/board/sessions/{id}/messages")
+  HeloResponse<LiveBoardMessageDto> addBoardMessage(@PathVariable Long id, @RequestBody LiveBoardMessageDto dto);
+
+  @DeleteMapping("/api/board/messages/{messageId}")
+  HeloResponse<LiveBoardMessageDto> deleteBoardMessage(@PathVariable Long messageId);
+
+  @GetMapping("/api/board/sessions/{id}/muted/{userId}")
+  HeloResponse<Boolean> isBoardUserMuted(@PathVariable Long id, @PathVariable String userId);
+
+  @PostMapping("/api/board/sessions/{id}/mute")
+  HeloResponse<List<String>> muteBoardUser(@PathVariable Long id, @RequestBody LiveBoardMuteDto dto);
+
+  @DeleteMapping("/api/board/sessions/{id}/mute/{userId}")
+  HeloResponse<List<String>> unmuteBoardUser(@PathVariable Long id, @PathVariable String userId);
+
+  @GetMapping("/api/board/sessions/{id}/songs")
+  HeloResponse<List<LiveBoardSongDto>> getBoardSongs(@PathVariable Long id);
+
+  @PostMapping("/api/board/sessions/{id}/songs")
+  HeloResponse<List<LiveBoardSongDto>> addBoardSong(@PathVariable Long id, @RequestBody LiveBoardSongDto dto);
+
+  @PostMapping("/api/board/songs/{songId}/toggle")
+  HeloResponse<List<LiveBoardSongDto>> toggleBoardSong(@PathVariable Long songId, @RequestParam String action);
 
 }
