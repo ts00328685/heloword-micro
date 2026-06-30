@@ -1,10 +1,15 @@
 eureka:
   instance:
     prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
   client:
     serviceUrl:
       defaultZone: http://micro-infra-discovery.default.svc.cluster.local:8761/eureka
     enabled: true
+    registry-fetch-interval-seconds: 5
+    initial-instance-info-replication-interval-seconds: 10
+    instance-info-replication-interval-seconds: 10
 
 feign:
   api-key: ${FEIGN_API_KEY}
