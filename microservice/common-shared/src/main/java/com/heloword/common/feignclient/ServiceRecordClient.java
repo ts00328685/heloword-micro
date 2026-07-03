@@ -33,6 +33,8 @@ import com.heloword.common.model.dto.board.LiveBoardMuteDto;
 import com.heloword.common.model.dto.board.LiveBoardSessionDto;
 import com.heloword.common.model.dto.board.LiveBoardSnapshotDto;
 import com.heloword.common.model.dto.board.LiveBoardSongDto;
+import com.heloword.common.model.dto.analytics.AnalyticsDashboardDto;
+import com.heloword.common.model.dto.analytics.AnalyticsIngestDto;
 
 @FeignClient(name = "SERVICE-RECORD", url = "${feign.service-record.url:}", configuration = FeignClientInterceptor.class)
 public interface ServiceRecordClient {
@@ -273,5 +275,13 @@ public interface ServiceRecordClient {
 
   @DeleteMapping("/api/board/songs/{songId}")
   HeloResponse<List<LiveBoardSongDto>> deleteBoardSong(@PathVariable Long songId);
+
+  // ── Analytics ─────────────────────────────────────────────────────────────
+
+  @PostMapping("/api/analytics/ingest")
+  HeloResponse<?> ingestAnalytics(@RequestBody AnalyticsIngestDto body);
+
+  @GetMapping("/api/analytics/dashboard")
+  HeloResponse<AnalyticsDashboardDto> getAnalyticsDashboard(@RequestParam("days") int days);
 
 }
