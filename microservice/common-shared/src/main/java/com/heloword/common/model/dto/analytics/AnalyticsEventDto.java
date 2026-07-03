@@ -14,6 +14,7 @@ public class AnalyticsEventDto {
   private String sessionId;
   private String eventType;
   private String eventName;
+  private String label;
   private String path;
   private String locale;
   private String device;

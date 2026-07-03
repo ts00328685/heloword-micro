@@ -52,6 +52,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
       a.setSessionId(clamp(e.getSessionId(), 128));
       a.setEventType(clamp(e.getEventType(), 32));
       a.setEventName(clamp(e.getEventName(), 255));
+      a.setLabel(clamp(e.getLabel(), MAX_STR));
       a.setPath(clamp(e.getPath(), MAX_STR));
       a.setLocale(clamp(e.getLocale(), 16));
       a.setDevice(clamp(e.getDevice(), 32));
@@ -81,6 +82,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         .daily(daily)
         .topPages(toCounts(repo.topPages(from, to, PageRequest.of(0, TOP_LIMIT))))
         .topEvents(toCounts(repo.topEvents(from, to, PageRequest.of(0, TOP_LIMIT))))
+        .topContent(toCounts(repo.topContent(from, to, PageRequest.of(0, TOP_LIMIT))))
         .devices(toCounts(repo.deviceSplit(from, to)))
         .userTypes(toUserTypes(repo.userTypeSplit(from, to)))
         .build();

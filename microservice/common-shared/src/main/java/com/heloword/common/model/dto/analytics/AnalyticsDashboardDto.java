@@ -20,6 +20,7 @@ public class AnalyticsDashboardDto {
   private List<AnalyticsPointDto> daily;
   private List<AnalyticsCountDto> topPages;
   private List<AnalyticsCountDto> topEvents;
+  private List<AnalyticsCountDto> topContent;
   private List<AnalyticsCountDto> devices;
   private List<AnalyticsCountDto> userTypes;
 }
