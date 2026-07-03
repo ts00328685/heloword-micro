@@ -37,6 +37,13 @@ public class AnalyticsEventEntity extends BaseEntity {
   /** Route path (e.g. {@code /vocabulary}) or action key (e.g. {@code quiz.start}). */
   private String eventName;
 
+  /**
+   * Human-readable subject of the event — an article title, a word, a button's derived
+   * label, etc. Nullable; used for content-level ("what was viewed") granularity.
+   */
+  @Column(length = 512)
+  private String label;
+
   /** The route the user was on when the event fired. */
   @Column(length = 512)
   private String path;

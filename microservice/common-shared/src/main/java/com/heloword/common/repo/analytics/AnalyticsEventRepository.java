@@ -32,11 +32,17 @@ public interface AnalyticsEventRepository extends IBaseRepo<AnalyticsEventEntity
       + "GROUP BY e.eventName ORDER BY COUNT(e) DESC")
   List<Object[]> topPages(@Param("from") Date from, @Param("to") Date to, Pageable pageable);
 
-  /** [eventName, count] for button/feature events, most-used first. */
+  /** [eventName, count] for button/feature/click events, most-used first. */
   @Query("SELECT e.eventName, COUNT(e) FROM AnalyticsEventEntity e "
-      + "WHERE e.eventType IN ('BUTTON','FEATURE') AND e.createDate BETWEEN :from AND :to "
+      + "WHERE e.eventType IN ('BUTTON','FEATURE','CLICK') AND e.createDate BETWEEN :from AND :to "
       + "GROUP BY e.eventName ORDER BY COUNT(e) DESC")
   List<Object[]> topEvents(@Param("from") Date from, @Param("to") Date to, Pageable pageable);
+
+  /** [label, count] for content VIEW events (articles/words viewed), most-viewed first. */
+  @Query("SELECT e.label, COUNT(e) FROM AnalyticsEventEntity e "
+      + "WHERE e.eventType = 'VIEW' AND e.label IS NOT NULL AND e.createDate BETWEEN :from AND :to "
+      + "GROUP BY e.label ORDER BY COUNT(e) DESC")
+  List<Object[]> topContent(@Param("from") Date from, @Param("to") Date to, Pageable pageable);
 
   /** [device, count]. */
   @Query("SELECT e.device, COUNT(e) FROM AnalyticsEventEntity e "
