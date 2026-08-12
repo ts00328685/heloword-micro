@@ -35,6 +35,11 @@ spring:
     url: ${HELO_DB_URL}
     username: ${HELO_DB_USERNAME}
     password: ${HELO_DB_PASSWORD}
+    hikari:
+      # The server default charset is utf8 (3-byte), so a connection that
+      # negotiates it silently rejects 4-byte characters — every emoji outside
+      # the BMP. Pin the session to utf8mb4 on each pooled connection.
+      connection-init-sql: SET NAMES utf8mb4
 
   redis:
     host: ${HELO_REDIS_URL}
