@@ -1,5 +1,6 @@
 package com.heloword.record.rest;
 
+import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -103,5 +104,20 @@ public class BoardRestController {
   @DeleteMapping("/songs/{songId}")
   public HeloResponse<?> deleteSong(@PathVariable Long songId) {
     return HeloResponse.successWithData(boardService.deleteSong(songId));
+  }
+
+  @PostMapping("/songs/{songId}/note")
+  public HeloResponse<?> updateSongNote(@PathVariable Long songId, @RequestBody LiveBoardSongDto dto) {
+    return HeloResponse.successWithData(boardService.updateSongNote(songId, dto.getNote()));
+  }
+
+  @PostMapping("/sessions/{id}/songs/reorder")
+  public HeloResponse<?> reorderSongs(@PathVariable Long id, @RequestBody List<Long> songIds) {
+    return HeloResponse.successWithData(boardService.reorderSongs(id, songIds));
+  }
+
+  @PostMapping("/sessions/{id}/songs/copy")
+  public HeloResponse<?> copySongs(@PathVariable Long id, @RequestParam Long sourceSessionId) {
+    return HeloResponse.successWithData(boardService.copySongs(id, sourceSessionId));
   }
 }

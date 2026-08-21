@@ -31,9 +31,13 @@ public class BoardPushService {
     messagingTemplate.convertAndSend("/topic/board/" + sessionId + "/events", event);
   }
 
-  /** Updated setlist. */
+  /**
+   * Updated setlist. The topic is public, so host-private notes are stripped here
+   * — an admin gets the noted list back in the HTTP response to their own action.
+   */
   public void sendSongs(Long sessionId, List<LiveBoardSongDto> songs) {
-    messagingTemplate.convertAndSend("/topic/board/" + sessionId + "/songs", songs);
+    messagingTemplate.convertAndSend("/topic/board/" + sessionId + "/songs",
+        LiveBoardSongDto.withoutNotes(songs));
   }
 
   /**

@@ -160,6 +160,34 @@ public class BoardFrontendServiceImpl implements BoardFrontendService {
   }
 
   @Override
+  public List<LiveBoardSongDto> getSongs(Long sessionId) {
+    return serviceRecordClient.getBoardSongs(sessionId).getData();
+  }
+
+  @Override
+  public List<LiveBoardSongDto> updateSongNote(Long sessionId, Long songId, String note) {
+    LiveBoardSongDto req = new LiveBoardSongDto();
+    req.setNote(note);
+    List<LiveBoardSongDto> songs = serviceRecordClient.updateBoardSongNote(songId, req).getData();
+    boardPushService.sendSongs(sessionId, songs);
+    return songs;
+  }
+
+  @Override
+  public List<LiveBoardSongDto> reorderSongs(Long sessionId, List<Long> songIds) {
+    List<LiveBoardSongDto> songs = serviceRecordClient.reorderBoardSongs(sessionId, songIds).getData();
+    boardPushService.sendSongs(sessionId, songs);
+    return songs;
+  }
+
+  @Override
+  public List<LiveBoardSongDto> copySongs(Long sessionId, Long sourceSessionId) {
+    List<LiveBoardSongDto> songs = serviceRecordClient.copyBoardSongs(sessionId, sourceSessionId).getData();
+    boardPushService.sendSongs(sessionId, songs);
+    return songs;
+  }
+
+  @Override
   public int presence(Long sessionId, String userId) {
     if (userId == null || userId.isEmpty()) {
       return countPresence(sessionId);

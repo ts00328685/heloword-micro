@@ -42,6 +42,18 @@ public interface BoardFrontendService {
 
   List<LiveBoardSongDto> deleteSong(Long sessionId, Long songId);
 
+  /** Full setlist including host-private notes — ADMIN callers only. */
+  List<LiveBoardSongDto> getSongs(Long sessionId);
+
+  /** Set a song's host-private note. */
+  List<LiveBoardSongDto> updateSongNote(Long sessionId, Long songId, String note);
+
+  /** Persist a new running order for the setlist. */
+  List<LiveBoardSongDto> reorderSongs(Long sessionId, List<Long> songIds);
+
+  /** Append another session's setlist to this one as fresh, unsung rows. */
+  List<LiveBoardSongDto> copySongs(Long sessionId, Long sourceSessionId);
+
   /** Record a viewer heartbeat; returns the current live viewer count. */
   int presence(Long sessionId, String userId);
 }
