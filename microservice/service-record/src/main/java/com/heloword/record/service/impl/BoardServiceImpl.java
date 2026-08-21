@@ -1,5 +1,6 @@
 package com.heloword.record.service.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -210,6 +211,7 @@ public class BoardServiceImpl implements BoardService {
     e.setRequestCount(0);
     int nextOrder = songRepo.findAllBySessionIdOrderBySortOrderAscIdAsc(sessionId).size();
     e.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : nextOrder);
+    e.setNote(dto.getNote());
     songRepo.save(e);
     return getSongs(sessionId);
   }
@@ -251,6 +253,58 @@ public class BoardServiceImpl implements BoardService {
   }
 
   // ── helpers ────────────────────────────────────────────────────────────────
+
+  @Override
+  @Transactional
+  public List<LiveBoardSongDto> updateSongNote(Long songId, String note) {
+    LiveBoardSongEntity e = songRepo.findById(songId)
+        .orElseThrow(() -> new IllegalArgumentException("Song not found: " + songId));
+    e.setNote(note == null || note.trim().isEmpty() ? null : note.trim());
+    songRepo.save(e);
+    return getSongs(e.getSessionId());
+  }
+
+  @Override
+  @Transactional
+  public List<LiveBoardSongDto> reorderSongs(Long sessionId, List<Long> songIds) {
+    List<LiveBoardSongEntity> songs = songRepo.findAllBySessionIdOrderBySortOrderAscIdAsc(sessionId);
+    List<Long> order = songIds == null ? new ArrayList<>() : songIds;
+    // A song missing from the request (added by a concurrent admin tab, say) must
+    // not collapse onto sortOrder 0 — park those after everything explicitly
+    // ranked, keeping the order they already had.
+    int unranked = order.size();
+    for (LiveBoardSongEntity song : songs) {
+      int rank = order.indexOf(song.getId());
+      song.setSortOrder(rank >= 0 ? rank : unranked++);
+    }
+    songRepo.saveAll(songs);
+    return getSongs(sessionId);
+  }
+
+  @Override
+  @Transactional
+  public List<LiveBoardSongDto> copySongs(Long sessionId, Long sourceSessionId) {
+    if (sessionId.equals(sourceSessionId)) {
+      throw new IllegalArgumentException("Cannot copy a setlist onto itself.");
+    }
+    // Fresh rows, not references: the new board starts unsung and unrequested, so
+    // last night's play counts never bleed into tonight's set.
+    int nextOrder = songRepo.findAllBySessionIdOrderBySortOrderAscIdAsc(sessionId).size();
+    List<LiveBoardSongEntity> copies = new ArrayList<>();
+    for (LiveBoardSongEntity source : songRepo.findAllBySessionIdOrderBySortOrderAscIdAsc(sourceSessionId)) {
+      LiveBoardSongEntity copy = new LiveBoardSongEntity();
+      copy.setSessionId(sessionId);
+      copy.setTitle(source.getTitle());
+      copy.setNote(source.getNote());
+      copy.setSung(false);
+      copy.setPerforming(false);
+      copy.setRequestCount(0);
+      copy.setSortOrder(nextOrder++);
+      copies.add(copy);
+    }
+    songRepo.saveAll(copies);
+    return getSongs(sessionId);
+  }
 
   private void endAllActive() {
     sessionRepo.findFirstByBoardStateOrderByIdDesc(STATE_ACTIVE).ifPresent(active -> {

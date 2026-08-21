@@ -40,4 +40,13 @@ public interface BoardService {
   List<LiveBoardSongDto> toggleSong(Long songId, String action);
 
   List<LiveBoardSongDto> deleteSong(Long songId);
+
+  /** Set the host-private note on a song. */
+  List<LiveBoardSongDto> updateSongNote(Long songId, String note);
+
+  /** Rewrite sortOrder to match the given id order; ids not in the list keep their place at the end. */
+  List<LiveBoardSongDto> reorderSongs(Long sessionId, List<Long> songIds);
+
+  /** Append copies of another session's setlist as fresh rows on this session. */
+  List<LiveBoardSongDto> copySongs(Long sessionId, Long sourceSessionId);
 }

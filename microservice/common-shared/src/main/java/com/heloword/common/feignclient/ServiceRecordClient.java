@@ -276,6 +276,15 @@ public interface ServiceRecordClient {
   @DeleteMapping("/api/board/songs/{songId}")
   HeloResponse<List<LiveBoardSongDto>> deleteBoardSong(@PathVariable Long songId);
 
+  @PostMapping("/api/board/songs/{songId}/note")
+  HeloResponse<List<LiveBoardSongDto>> updateBoardSongNote(@PathVariable Long songId, @RequestBody LiveBoardSongDto dto);
+
+  @PostMapping("/api/board/sessions/{id}/songs/reorder")
+  HeloResponse<List<LiveBoardSongDto>> reorderBoardSongs(@PathVariable Long id, @RequestBody List<Long> songIds);
+
+  @PostMapping("/api/board/sessions/{id}/songs/copy")
+  HeloResponse<List<LiveBoardSongDto>> copyBoardSongs(@PathVariable Long id, @RequestParam Long sourceSessionId);
+
   // ── Analytics ─────────────────────────────────────────────────────────────
 
   @PostMapping("/api/analytics/ingest")

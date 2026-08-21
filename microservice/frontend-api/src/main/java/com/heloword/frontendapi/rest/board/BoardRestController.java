@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.rest.board;
 
+import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -14,6 +15,7 @@ import com.heloword.common.model.dto.UserDto;
 import com.heloword.common.model.dto.board.LiveBoardMessageDto;
 import com.heloword.common.model.dto.board.LiveBoardMuteDto;
 import com.heloword.common.model.dto.board.LiveBoardSessionDto;
+import com.heloword.common.model.dto.board.LiveBoardSnapshotDto;
 import com.heloword.common.model.dto.board.LiveBoardSongDto;
 import com.heloword.common.type.ResponseCode;
 import com.heloword.frontendapi.service.board.BoardFrontendService;
@@ -41,7 +43,11 @@ public class BoardRestController extends AbstractBaseFrontendRestController {
   @GetMapping("/sessions/{id}")
   public HeloResponse<?> getSnapshot(@PathVariable Long id, @RequestParam(required = false) String userId) {
     // Member UUID wins; guests pass their guest UUID as the query param.
-    return HeloResponse.successWithData(boardFrontendService.getSnapshot(id, resolveUserId(userId)));
+    LiveBoardSnapshotDto snapshot = boardFrontendService.getSnapshot(id, resolveUserId(userId));
+    if (snapshot != null && !isAdmin()) {
+      snapshot.setSongs(LiveBoardSongDto.withoutNotes(snapshot.getSongs()));
+    }
+    return HeloResponse.successWithData(snapshot);
   }
 
   @PostMapping("/sessions/{id}/messages/{messageId}/like")
@@ -82,7 +88,7 @@ public class BoardRestController extends AbstractBaseFrontendRestController {
     if (!"request".equals(action) && !isAdmin()) {
       return fail(ResponseCode.INSUFFICIENT_AUTHORITY);
     }
-    return HeloResponse.successWithData(boardFrontendService.toggleSong(id, songId, action));
+    return HeloResponse.successWithData(songsFor(boardFrontendService.toggleSong(id, songId, action)));
   }
 
   // ── Admin only ──────────────────────────────────────────────────────────────
@@ -167,6 +173,51 @@ public class BoardRestController extends AbstractBaseFrontendRestController {
   @DeleteMapping("/sessions/{id}/songs/{songId}")
   public HeloResponse<?> deleteSong(@PathVariable Long id, @PathVariable Long songId) {
     return HeloResponse.successWithData(boardFrontendService.deleteSong(id, songId));
+  }
+
+  /** Full setlist with host-private notes — used by the admin setlist editor. */
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @GetMapping("/sessions/{id}/songs")
+  public HeloResponse<?> getSongs(@PathVariable Long id) {
+    return HeloResponse.successWithData(boardFrontendService.getSongs(id));
+  }
+
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @PostMapping("/sessions/{id}/songs/{songId}/note")
+  public HeloResponse<?> updateSongNote(@PathVariable Long id, @PathVariable Long songId,
+      @RequestBody LiveBoardSongDto body) {
+    String note = body.getNote() == null ? "" : body.getNote().trim();
+    if (note.length() > 500) {
+      note = note.substring(0, 500);
+    }
+    return HeloResponse.successWithData(boardFrontendService.updateSongNote(id, songId, note));
+  }
+
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @PostMapping("/sessions/{id}/songs/reorder")
+  public HeloResponse<?> reorderSongs(@PathVariable Long id, @RequestBody List<Long> songIds) {
+    if (songIds == null || songIds.isEmpty()) {
+      return fail("No songs to reorder.");
+    }
+    return HeloResponse.successWithData(boardFrontendService.reorderSongs(id, songIds));
+  }
+
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @PostMapping("/sessions/{id}/songs/copy")
+  public HeloResponse<?> copySongs(@PathVariable Long id, @RequestParam Long sourceSessionId) {
+    if (sourceSessionId == null || sourceSessionId.equals(id)) {
+      return fail("Pick a different board to copy from.");
+    }
+    return HeloResponse.successWithData(boardFrontendService.copySongs(id, sourceSessionId));
+  }
+
+  /**
+   * Songs as the caller is allowed to see them. The host-private note is dropped
+   * for everyone but an ADMIN — hiding it client-side would still ship it in the
+   * JSON that any audience member can read.
+   */
+  private List<LiveBoardSongDto> songsFor(List<LiveBoardSongDto> songs) {
+    return isAdmin() ? songs : LiveBoardSongDto.withoutNotes(songs);
   }
 
   // ── identity helpers (UUID-only) ────────────────────────────────────────────

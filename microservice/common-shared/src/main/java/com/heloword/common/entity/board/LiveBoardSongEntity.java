@@ -1,5 +1,6 @@
 package com.heloword.common.entity.board;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -35,4 +36,12 @@ public class LiveBoardSongEntity extends BaseEntity {
 
   /** Display order in the setlist. */
   private Integer sortOrder;
+
+  /**
+   * Host-private performance note (key, capo, cue, who requested it). Only ever
+   * returned to an ADMIN caller — stripped from audience payloads and from the
+   * setlist broadcast.
+   */
+  @Column(length = 500)
+  private String note;
 }
