@@ -256,10 +256,17 @@ public class BoardServiceImpl implements BoardService {
 
   @Override
   @Transactional
-  public List<LiveBoardSongDto> updateSongNote(Long songId, String note) {
+  public List<LiveBoardSongDto> updateSong(Long songId, LiveBoardSongDto dto) {
     LiveBoardSongEntity e = songRepo.findById(songId)
         .orElseThrow(() -> new IllegalArgumentException("Song not found: " + songId));
-    e.setNote(note == null || note.trim().isEmpty() ? null : note.trim());
+    // A blank title would leave an unidentifiable row in the setlist, so an empty
+    // one is treated as "not editing the title" rather than as a rename to "".
+    String title = dto.getTitle() == null ? "" : dto.getTitle().trim();
+    if (!title.isEmpty()) {
+      e.setTitle(title);
+    }
+    String note = dto.getNote() == null ? "" : dto.getNote().trim();
+    e.setNote(note.isEmpty() ? null : note);
     songRepo.save(e);
     return getSongs(e.getSessionId());
   }
