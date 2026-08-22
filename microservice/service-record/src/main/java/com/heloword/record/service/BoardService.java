@@ -41,8 +41,8 @@ public interface BoardService {
 
   List<LiveBoardSongDto> deleteSong(Long songId);
 
-  /** Set the host-private note on a song. */
-  List<LiveBoardSongDto> updateSongNote(Long songId, String note);
+  /** Rename a song and/or set its host-private note. */
+  List<LiveBoardSongDto> updateSong(Long songId, LiveBoardSongDto dto);
 
   /** Rewrite sortOrder to match the given id order; ids not in the list keep their place at the end. */
   List<LiveBoardSongDto> reorderSongs(Long sessionId, List<Long> songIds);

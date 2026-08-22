@@ -182,15 +182,23 @@ public class BoardRestController extends AbstractBaseFrontendRestController {
     return HeloResponse.successWithData(boardFrontendService.getSongs(id));
   }
 
+  /** Rename a song and/or set its host-private note. */
   @PreAuthorize("hasAuthority('ADMIN')")
-  @PostMapping("/sessions/{id}/songs/{songId}/note")
-  public HeloResponse<?> updateSongNote(@PathVariable Long id, @PathVariable Long songId,
+  @PostMapping("/sessions/{id}/songs/{songId}")
+  public HeloResponse<?> updateSong(@PathVariable Long id, @PathVariable Long songId,
       @RequestBody LiveBoardSongDto body) {
+    String title = body.getTitle() == null ? "" : body.getTitle().trim();
+    if (title.isEmpty()) {
+      return fail("Song title is required.");
+    }
+    if (title.length() > 200) {
+      title = title.substring(0, 200);
+    }
     String note = body.getNote() == null ? "" : body.getNote().trim();
     if (note.length() > 500) {
       note = note.substring(0, 500);
     }
-    return HeloResponse.successWithData(boardFrontendService.updateSongNote(id, songId, note));
+    return HeloResponse.successWithData(boardFrontendService.updateSong(id, songId, title, note));
   }
 
   @PreAuthorize("hasAuthority('ADMIN')")

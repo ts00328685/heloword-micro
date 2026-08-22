@@ -165,10 +165,11 @@ public class BoardFrontendServiceImpl implements BoardFrontendService {
   }
 
   @Override
-  public List<LiveBoardSongDto> updateSongNote(Long sessionId, Long songId, String note) {
+  public List<LiveBoardSongDto> updateSong(Long sessionId, Long songId, String title, String note) {
     LiveBoardSongDto req = new LiveBoardSongDto();
+    req.setTitle(title);
     req.setNote(note);
-    List<LiveBoardSongDto> songs = serviceRecordClient.updateBoardSongNote(songId, req).getData();
+    List<LiveBoardSongDto> songs = serviceRecordClient.updateBoardSong(songId, req).getData();
     boardPushService.sendSongs(sessionId, songs);
     return songs;
   }

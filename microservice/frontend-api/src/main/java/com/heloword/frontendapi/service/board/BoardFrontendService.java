@@ -45,8 +45,8 @@ public interface BoardFrontendService {
   /** Full setlist including host-private notes — ADMIN callers only. */
   List<LiveBoardSongDto> getSongs(Long sessionId);
 
-  /** Set a song's host-private note. */
-  List<LiveBoardSongDto> updateSongNote(Long sessionId, Long songId, String note);
+  /** Rename a song and/or set its host-private note. */
+  List<LiveBoardSongDto> updateSong(Long sessionId, Long songId, String title, String note);
 
   /** Persist a new running order for the setlist. */
   List<LiveBoardSongDto> reorderSongs(Long sessionId, List<Long> songIds);

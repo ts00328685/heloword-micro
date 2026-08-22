@@ -106,9 +106,9 @@ public class BoardRestController {
     return HeloResponse.successWithData(boardService.deleteSong(songId));
   }
 
-  @PostMapping("/songs/{songId}/note")
-  public HeloResponse<?> updateSongNote(@PathVariable Long songId, @RequestBody LiveBoardSongDto dto) {
-    return HeloResponse.successWithData(boardService.updateSongNote(songId, dto.getNote()));
+  @PostMapping("/songs/{songId}")
+  public HeloResponse<?> updateSong(@PathVariable Long songId, @RequestBody LiveBoardSongDto dto) {
+    return HeloResponse.successWithData(boardService.updateSong(songId, dto));
   }
 
   @PostMapping("/sessions/{id}/songs/reorder")
