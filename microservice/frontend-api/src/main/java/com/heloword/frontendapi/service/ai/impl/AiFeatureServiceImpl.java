@@ -50,7 +50,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
         + "解釋：<用繁體中文簡短解釋單字的意思，1-2句>\n"
         + langLabel + "例句：<用" + langLabel + "造一個自然的例句>\n"
         + "中文翻譯：<將上面例句翻譯成繁體中文>\n"
-        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
+        + PromptRules.furiganaZh(wordLang) + PromptRules.TRADITIONAL_ZH;
     String user = "單字：" + word
         + (en.isEmpty() ? "" : "（英文意思：" + en + "）")
         + (ch.isEmpty() ? "" : "（中文意思：" + ch + "）");
@@ -70,7 +70,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位，<>內為填寫說明，輸出時不要保留<>：\n"
         + langLabel + "例句：<用" + langLabel + "造一個自然的例句>\n"
         + "中文翻譯：<將上面例句翻譯成繁體中文>\n"
-        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
+        + PromptRules.furiganaZh(wordLang) + PromptRules.TRADITIONAL_ZH;
     String user = "單字：" + word + (en.isEmpty() ? "" : "（意思：" + en + "）");
 
     return callLlm(system, user);
@@ -85,7 +85,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     int wrong = request.getWrongCount();
 
     String system = "你是一位鼓勵學生的" + langLabel + "學習教練。請用繁體中文回覆，給出一句鼓勵的話和一個具體的學習建議，共2句，不要其他內容。"
-        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
+        + PromptRules.furiganaZh(request.getLang()) + PromptRules.TRADITIONAL_ZH;
     String user = "我最近的背單字正確率是" + pct + "%，答錯了" + wrong + "個單字。";
 
     return callLlm(system, user);
@@ -103,7 +103,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
 
     String system = "你是一位" + langLabel + "老師。請用繁體中文，在3句以內說明「" + word
         + "」有哪些近義詞或相似說法，以及各自適合使用的情境，回覆要簡潔。"
-        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
+        + PromptRules.furiganaZh(wordLang) + PromptRules.TRADITIONAL_ZH;
     String user = "單字：" + word
         + (en.isEmpty() ? "" : "（英文意思：" + en + "）")
         + (ch.isEmpty() ? "" : "（中文意思：" + ch + "）");
@@ -198,7 +198,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
         + "MEANING_ZH: <簡短繁體中文意思，不超過8個字>\n"
         + "SENTENCE: <用" + langLabel + "造一個自然的例句，不可使用其他語言>\n"
         + "SENTENCE_ZH: <將上面例句翻譯成繁體中文>\n"
-        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
+        + PromptRules.furiganaZh(wordLang) + PromptRules.TRADITIONAL_ZH;
     String user = word;
 
     String raw = callLlm(system, user);

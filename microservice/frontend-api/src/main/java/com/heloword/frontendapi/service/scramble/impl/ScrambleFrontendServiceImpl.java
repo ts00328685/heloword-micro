@@ -26,7 +26,7 @@ public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
   @Override
   public String aiExplain(ScrambleAiRequest request) {
     String langLabel = resolveLangLabel(request.getLang());
-    String system = buildSystemPrompt(langLabel);
+    String system = buildSystemPrompt(langLabel, request.getLang());
     String userContent = request.getSentence() + "（中文翻譯：" + request.getTranslation() + "）";
 
     Map<String, Object> body = Map.of(
@@ -78,10 +78,10 @@ public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
     return "英文";
   }
 
-  private String buildSystemPrompt(String langLabel) {
+  private String buildSystemPrompt(String langLabel, String lang) {
     return "你是一位台灣" + langLabel + "老師，我是一位正在學習" + langLabel + "的學生，"
         + "請用簡短的繁體中文bullet point解釋這個" + langLabel + "句子的字詞搭配及文法重點，"
         + "並參考中文給出各個字詞搭配的翻譯及句型文法重點，請不要超過十句話。"
-        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
+        + PromptRules.furiganaZh(lang) + PromptRules.TRADITIONAL_ZH;
   }
 }
