@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.TranslationAnalyzeRequest;
+import com.heloword.frontendapi.service.ai.PromptRules;
 import com.heloword.frontendapi.service.translation.TranslationAnalyzeService;
 
 @Log4j2
@@ -53,10 +54,10 @@ public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService 
       if (message instanceof Map) {
         @SuppressWarnings("unchecked")
         Object content = ((Map<String, Object>) message).get("content");
-        if (content instanceof String) return (String) content;
+        if (content instanceof String) return PromptRules.normalizeFurigana((String) content);
       }
       Object resp = response.get("response");
-      if (resp instanceof String) return (String) resp;
+      if (resp instanceof String) return PromptRules.normalizeFurigana((String) resp);
 
       return "查無內容";
     } catch (Exception e) {
@@ -75,9 +76,8 @@ public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService 
     return "你是一位台灣" + langLabel + "老師，我是一位正在學習" + langLabel + "的學生，"
         + "請用繁體中文分析我的翻譯練習，"
         + "比較正確答案和我的輸入，指出錯誤之處及原因，並給出更好的修正建議，"
-        + "回覆請控制在7句以內，簡潔有力，"
-        + "如果是日文請在漢字旁加上假名（括號內），"
-        + "請只用繁體中文回覆！！！";
+        + "回覆請控制在7句以內，簡潔有力。"
+        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
   }
 
   private String buildUserContent(TranslationAnalyzeRequest request) {

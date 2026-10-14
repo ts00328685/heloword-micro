@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import com.heloword.common.model.dto.UserCustomWordDto;
 import com.heloword.frontendapi.config.LLMProperties;
+import com.heloword.frontendapi.service.ai.PromptRules;
 import com.heloword.frontendapi.service.vocab.PhotoParseService;
 
 import java.time.Duration;
@@ -26,6 +27,14 @@ import java.time.Duration;
 public class PhotoParseServiceImpl implements PhotoParseService {
 
   public static final String MAX_WORDS_EXTRACTED = "5";
+
+  /** Prefer meanings written in the photo (e.g. by a teacher on a whiteboard) over the model's own translation. */
+  private static final String USE_VISIBLE_MEANINGS =
+      "IMPORTANT: If the image already shows a meaning or translation written next to a word "
+      + "(e.g. a teacher's notes on a whiteboard), copy that meaning exactly as written into the matching field "
+      + "(Chinese meaning -> \"translateCh\", English meaning -> \"translateEn\"); do NOT re-translate, rephrase, shorten or 'correct' it. "
+      + "Only translate yourself when no meaning for that word is visible. "
+      + "If only the Chinese meaning is visible, base \"translateEn\" on that Chinese meaning so both match the teacher's intent. ";
 
   @Autowired
   private LLMProperties llmProperties;
@@ -79,16 +88,21 @@ public class PhotoParseServiceImpl implements PhotoParseService {
   private String buildPrompt(String lang) {
     String normalizedLang = lang == null ? "EN" : lang.toUpperCase();
     if ("JA".equals(normalizedLang)) {
-      return "Extract at max " + MAX_WORDS_EXTRACTED + " Japanese words or phrases from this image. if there's kanji, put hiragana in square brackets next to it "
+      return "Extract at max " + MAX_WORDS_EXTRACTED + " Japanese words or phrases from this image. "
+          + PromptRules.FURIGANA_EN + " If readings are written in the image, use those readings. "
+          + PromptRules.TRADITIONAL_EN + " "
+          + USE_VISIBLE_MEANINGS
           + "Return ONLY a JSON array, no markdown. Each object: "
           + "\"word\" (Japanese word/phrase), "
-          + "\"translateEn\" (English meaning), "
-          + "\"translateCh\" (Traditional Chinese, empty string if unknown), "
+          + "\"translateEn\" (English meaning: as written in the image if visible, otherwise your translation), "
+          + "\"translateCh\" (Traditional Chinese meaning: as written in the image if visible, otherwise your translation), "
           + "\"phonetics\" (furigana if visible, otherwise empty string), "
           + "\"sentence\" (example sentence if visible, otherwise empty string). "
-          + "Example: [{\"word\":\"日本[にほん]へ行[い]く\",\"translateEn\":\"going to Japan\",\"translateCh\":\"去日本\",\"phonetics\":\"\",\"sentence\":\"来年日本へ行く\"}]";
+          + "Example (image shows 「日本へ行く　前往日本」, so the written meaning is copied as-is): "
+          + "[{\"word\":\"日本[にほん]へ行[い]く\",\"translateEn\":\"go to Japan\",\"translateCh\":\"前往日本\",\"phonetics\":\"\",\"sentence\":\"\"}]";
     } else if ("ZH".equals(normalizedLang)) {
-      return "Extract at max " + MAX_WORDS_EXTRACTED + " Traditional Chinese words or phrases from this image. "
+      return "Extract at max " + MAX_WORDS_EXTRACTED + " Chinese words or phrases from this image. "
+          + PromptRules.TRADITIONAL_EN + " If the image contains Simplified Chinese, convert it to Traditional Chinese. "
           + "Return ONLY a JSON array, no markdown. Each object: "
           + "\"word\" (Chinese word/phrase), "
           + "\"translateEn\" (English meaning), "
@@ -98,10 +112,12 @@ public class PhotoParseServiceImpl implements PhotoParseService {
           + "Example: [{\"word\":\"蘋果\",\"translateEn\":\"apple\",\"translateCh\":\"蘋果\",\"phonetics\":\"\",\"sentence\":\"\"}]";
     } else {
       return "Extract at max " + MAX_WORDS_EXTRACTED + " English words or phrases from this image. "
+          + PromptRules.TRADITIONAL_EN + " "
+          + USE_VISIBLE_MEANINGS
           + "Return ONLY a JSON array, no markdown. Each object: "
           + "\"word\" (English word/phrase), "
-          + "\"translateEn\" (definition in English), "
-          + "\"translateCh\" (Traditional Chinese translation), "
+          + "\"translateEn\" (definition in English: as written in the image if visible, otherwise your own), "
+          + "\"translateCh\" (Traditional Chinese meaning: as written in the image if visible, otherwise your translation), "
           + "\"phonetics\" (pronunciation if visible, otherwise empty string), "
           + "\"sentence\" (example sentence if visible, otherwise empty string). "
           + "Example: [{\"word\":\"apple\",\"translateEn\":\"a round fruit\",\"translateCh\":\"蘋果\",\"phonetics\":\"\",\"sentence\":\"\"}]";
@@ -113,10 +129,10 @@ public class PhotoParseServiceImpl implements PhotoParseService {
     Object message = response.get("message");
     if (message instanceof Map) {
       Object content = ((Map<String, Object>) message).get("content");
-      if (content instanceof String) return (String) content;
+      if (content instanceof String) return PromptRules.normalizeFurigana((String) content);
     }
     Object resp = response.get("response");
-    if (resp instanceof String) return (String) resp;
+    if (resp instanceof String) return PromptRules.normalizeFurigana((String) resp);
     return null;
   }
 

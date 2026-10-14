@@ -23,6 +23,7 @@ import com.heloword.frontendapi.model.response.QuickTranslateResponse;
 import com.heloword.frontendapi.model.response.WordFillResponse;
 import com.heloword.frontendapi.model.response.VerbConjugationResponse;
 import com.heloword.frontendapi.service.ai.AiFeatureService;
+import com.heloword.frontendapi.service.ai.PromptRules;
 import com.heloword.common.exception.HeloServiceException;
 import com.heloword.common.type.ResponseCode;
 
@@ -45,10 +46,11 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String en = request.getTranslateEn() != null ? request.getTranslateEn() : "";
     String ch = request.getTranslateCh() != null ? request.getTranslateCh() : "";
 
-    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位，若為日文，請在日文例句的漢字旁用括號標注假名：\n"
-        + "解釋：（用繁體中文簡短解釋單字的意思，1-2句）\n"
-        + langLabel + "例句：（用" + langLabel + "造一個自然的例句）\n"
-        + "中文翻譯：（將上面例句翻譯成繁體中文）";
+    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位，<>內為填寫說明，輸出時不要保留<>：\n"
+        + "解釋：<用繁體中文簡短解釋單字的意思，1-2句>\n"
+        + langLabel + "例句：<用" + langLabel + "造一個自然的例句>\n"
+        + "中文翻譯：<將上面例句翻譯成繁體中文>\n"
+        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
     String user = "單字：" + word
         + (en.isEmpty() ? "" : "（英文意思：" + en + "）")
         + (ch.isEmpty() ? "" : "（中文意思：" + ch + "）");
@@ -65,9 +67,10 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String word = request.getWord();
     String en = request.getTranslateEn() != null ? request.getTranslateEn() : "";
 
-    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位，若為日文，請在日文例句的漢字旁用括號標注假名：\n"
-        + langLabel + "例句：（用" + langLabel + "造一個自然的例句）\n"
-        + "中文翻譯：（將上面例句翻譯成繁體中文）";
+    String system = "你是一位" + langLabel + "老師。請嚴格按照以下格式回覆，不要增減任何欄位，<>內為填寫說明，輸出時不要保留<>：\n"
+        + langLabel + "例句：<用" + langLabel + "造一個自然的例句>\n"
+        + "中文翻譯：<將上面例句翻譯成繁體中文>\n"
+        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
     String user = "單字：" + word + (en.isEmpty() ? "" : "（意思：" + en + "）");
 
     return callLlm(system, user);
@@ -81,7 +84,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     int pct = request.getAccuracyPct();
     int wrong = request.getWrongCount();
 
-    String system = "你是一位鼓勵學生的" + langLabel + "學習教練。請用繁體中文回覆，給出一句鼓勵的話和一個具體的學習建議，共2句，不要其他內容。";
+    String system = "你是一位鼓勵學生的" + langLabel + "學習教練。請用繁體中文回覆，給出一句鼓勵的話和一個具體的學習建議，共2句，不要其他內容。"
+        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
     String user = "我最近的背單字正確率是" + pct + "%，答錯了" + wrong + "個單字。";
 
     return callLlm(system, user);
@@ -98,7 +102,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String ch = request.getTranslateCh() != null ? request.getTranslateCh() : "";
 
     String system = "你是一位" + langLabel + "老師。請用繁體中文，在3句以內說明「" + word
-        + "」有哪些近義詞或相似說法，以及各自適合使用的情境，回覆要簡潔。";
+        + "」有哪些近義詞或相似說法，以及各自適合使用的情境，回覆要簡潔。"
+        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
     String user = "單字：" + word
         + (en.isEmpty() ? "" : "（英文意思：" + en + "）")
         + (ch.isEmpty() ? "" : "（中文意思：" + ch + "）");
@@ -115,7 +120,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
         + "LANG: <en|de|jp|ch>\n"
         + "WORD: <if Japanese, annotate each kanji immediately with its hiragana reading in square brackets, e.g. 組[く]み合[あ]わせる; otherwise output original text unchanged>\n"
         + "EN: <English meaning, max 6 words>\n"
-        + "ZH: <繁體中文意思，最多6字>";
+        + "ZH: <繁體中文意思，最多6字>\n"
+        + PromptRules.FURIGANA_EN + " " + PromptRules.TRADITIONAL_EN;
     String raw = callLlm(system, text);
     return parseQuickTranslate(raw, text);
   }
@@ -167,10 +173,10 @@ public class AiFeatureServiceImpl implements AiFeatureService {
       if (message instanceof Map) {
         @SuppressWarnings("unchecked")
         Object content = ((Map<String, Object>) message).get("content");
-        if (content instanceof String) return (String) content;
+        if (content instanceof String) return PromptRules.normalizeFurigana((String) content);
       }
       Object resp = response.get("response");
-      if (resp instanceof String) return (String) resp;
+      if (resp instanceof String) return PromptRules.normalizeFurigana((String) resp);
 
       return "查無內容";
     } catch (Exception e) {
@@ -191,7 +197,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
         + "MEANING_EN: <簡短英文意思，不超過8個英文單字>\n"
         + "MEANING_ZH: <簡短繁體中文意思，不超過8個字>\n"
         + "SENTENCE: <用" + langLabel + "造一個自然的例句，不可使用其他語言>\n"
-        + "SENTENCE_ZH: <將上面例句翻譯成繁體中文>";
+        + "SENTENCE_ZH: <將上面例句翻譯成繁體中文>\n"
+        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
     String user = word;
 
     String raw = callLlm(system, user);
@@ -232,7 +239,7 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String system = "You are a verb conjugation assistant. Auto-detect if the input is an English verb or Japanese verb.\n"
         + "Output EXACTLY the following lines with NO extra text:\n"
         + "LANG: <en|jp>\n"
-        + "WORD: <base form; if Japanese annotate kanji with hiragana in brackets e.g. 食[た]べる>\n"
+        + "WORD: <base form; if Japanese annotate kanji with hiragana in square brackets e.g. 食[た]べる>\n"
         + "MEANING_EN: <English meaning, max 6 words>\n"
         + "MEANING_ZH: <繁體中文意思，最多6字>\n"
         + "If LANG is en, output these 3 lines:\n"
@@ -250,7 +257,8 @@ public class AiFeatureServiceImpl implements AiFeatureService {
         + "命令形: <imperative form>\n"
         + "被動形: <passive form>\n"
         + "使役形: <causative form>\n"
-        + "If the input is NOT a verb at all, output exactly: ERROR: not_a_verb";
+        + "If the input is NOT a verb at all, output exactly: ERROR: not_a_verb\n"
+        + PromptRules.FURIGANA_EN + " " + PromptRules.TRADITIONAL_EN;
     String raw = callLlm(system, word);
     return parseVerbConjugation(raw, word);
   }
