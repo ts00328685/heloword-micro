@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.ScrambleAiRequest;
+import com.heloword.frontendapi.service.ai.PromptRules;
 import com.heloword.frontendapi.service.scramble.ScrambleFrontendService;
 
 @Log4j2
@@ -58,11 +59,11 @@ public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
       if (message instanceof Map) {
         @SuppressWarnings("unchecked")
         Object content = ((Map<String, Object>) message).get("content");
-        if (content instanceof String) return (String) content;
+        if (content instanceof String) return PromptRules.normalizeFurigana((String) content);
       }
       // Fallback to response field (older Ollama generate format)
       Object resp = response.get("response");
-      if (resp instanceof String) return (String) resp;
+      if (resp instanceof String) return PromptRules.normalizeFurigana((String) resp);
 
       return "查無內容";
     } catch (Exception e) {
@@ -80,8 +81,7 @@ public class ScrambleFrontendServiceImpl implements ScrambleFrontendService {
   private String buildSystemPrompt(String langLabel) {
     return "你是一位台灣" + langLabel + "老師，我是一位正在學習" + langLabel + "的學生，"
         + "請用簡短的繁體中文bullet point解釋這個" + langLabel + "句子的字詞搭配及文法重點，"
-        + "請用繁體中文回覆，並參考中文給出各個字詞搭配的翻譯及句型文法重點，請不要超過十句話"
-        + "please provide hiragana aside kanji in parenthesis in your answer if it's japanese "
-        + "and reply with Traditional Chinese only!!!";
+        + "並參考中文給出各個字詞搭配的翻譯及句型文法重點，請不要超過十句話。"
+        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
   }
 }

@@ -22,6 +22,7 @@ import com.heloword.common.feignclient.ServiceWordClient;
 import com.heloword.frontendapi.config.CacheConfig;
 import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.response.FunArticleDto;
+import com.heloword.frontendapi.service.ai.PromptRules;
 import com.heloword.frontendapi.service.funarticle.FunArticleService;
 
 @Log4j2
@@ -100,7 +101,8 @@ public class FunArticleServiceImpl implements FunArticleService {
   @SuppressWarnings("unchecked")
   private String generateArticle(String word) {
     String system = "You are a language teacher who writes short, fun articles to help people memorize English words. "
-        + "You always follow the exact output format given to you. Do not add any extra commentary or sections.";
+        + "You always follow the exact output format given to you. Do not add any extra commentary or sections. "
+        + PromptRules.FURIGANA_EN + " " + PromptRules.TRADITIONAL_EN;
     String user = "Write a fun article for the English word \"" + word + "\" using this exact format:\n\n"
         + "## " + word + "\n\n"
         + "[Write a funny, easy-to-understand article of about 80-100 words using the word \"" + word + "\" at least twice. "
@@ -109,10 +111,10 @@ public class FunArticleServiceImpl implements FunArticleService {
         + "1. [A short example sentence using \"" + word + "\"]\n"
         + "2. [Another short example sentence using \"" + word + "\"]\n\n"
         + "**繁體中文翻譯 (Traditional Chinese):**\n"
-        + "[Translate the article and both sample sentences into Traditional Chinese]\n\n"
+        + "[Translate the article and both sample sentences into Traditional Chinese (Taiwan). No Simplified Chinese.]\n\n"
         + "**日本語訳 (Japanese):**\n"
         + "[Translate the article and both sample sentences into Japanese. "
-        + "For every kanji, add the reading in hiragana in parentheses immediately after it, like: 日本語(にほんご)]\n\n"
+        + "For every kanji, add the reading in hiragana in square brackets immediately after it, like: 日本語[にほんご]]\n\n"
         + "Follow this format exactly. Do not skip any section.";
 
     Map<String, Object> body = Map.of(
@@ -137,10 +139,10 @@ public class FunArticleServiceImpl implements FunArticleService {
     Object message = response.get("message");
     if (message instanceof Map) {
       Object content = ((Map<String, Object>) message).get("content");
-      if (content instanceof String) return (String) content;
+      if (content instanceof String) return PromptRules.normalizeFurigana((String) content);
     }
     Object resp = response.get("response");
-    if (resp instanceof String) return (String) resp;
+    if (resp instanceof String) return PromptRules.normalizeFurigana((String) resp);
     throw new RuntimeException("unexpected LLM response format");
   }
 }
