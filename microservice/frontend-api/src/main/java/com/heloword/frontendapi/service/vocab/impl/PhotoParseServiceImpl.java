@@ -40,6 +40,7 @@ public class PhotoParseServiceImpl implements PhotoParseService {
   private LLMProperties llmProperties;
 
     private final RestTemplate restTemplate = new RestTemplateBuilder()
+      .setConnectTimeout(Duration.ofSeconds(5))
       .setReadTimeout(Duration.ofSeconds(30))
       .build();
   private final ObjectMapper objectMapper = new ObjectMapper();

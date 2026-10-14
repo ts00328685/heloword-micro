@@ -10,28 +10,24 @@ public final class PromptRules {
 
   /** Furigana rule for Chinese-language prompts. */
   public static final String FURIGANA_ZH =
-      "若內容含有日文，請在每個漢字（或連續漢字詞）後面緊接著用半形方括號[]標注平假名讀音，"
-      + "例如：その曲[きょく]、食[た]べる、日本語[にほんご]；絕對不可使用圓括號（）或()標注讀音。"
-      + "只標注日文漢字，英文或其他非日文單字絕對不可加注假名。";
+      "日文漢字後緊接半形方括號標平假名，如その曲[きょく]、食[た]べる；禁用()或（）；英文等非日文不可標假名。";
 
   /** For non-Japanese content: stops the model from inventing readings for English words. */
   public static final String NO_FURIGANA_ZH =
-      "此內容不是日文，請勿加注任何平假名、片假名或讀音標記。";
+      "此非日文內容，勿標任何假名。";
 
   /** Traditional Chinese rule for Chinese-language prompts. */
   public static final String TRADITIONAL_ZH =
-      "所有中文一律使用台灣繁體中文（正體字），絕對不可出現任何簡體字。";
+      "中文一律用台灣繁體字，禁用簡體字。";
 
   /** Furigana rule for English-language prompts. */
   public static final String FURIGANA_EN =
-      "If any Japanese appears, annotate each kanji (or kanji compound) immediately with its hiragana reading "
-      + "in half-width square brackets, e.g. その曲[きょく], 食[た]べる, 日本語[にほんご]. "
-      + "Never use parentheses （） or () for readings. "
-      + "Only annotate Japanese kanji; never add readings to English or other non-Japanese words.";
+      "Japanese kanji: put the hiragana reading right after it in square brackets, e.g. 食[た]べる, 日本語[にほんご]; "
+      + "never use (); never annotate non-Japanese words.";
 
   /** Traditional Chinese rule for English-language prompts. */
   public static final String TRADITIONAL_EN =
-      "Any Chinese text must be Traditional Chinese as used in Taiwan (繁體中文); never use Simplified Chinese characters.";
+      "Chinese must be Traditional (Taiwan), never Simplified.";
 
   /** Kanji run followed by a hiragana-only reading in full- or half-width parentheses. */
   private static final Pattern PAREN_FURIGANA =

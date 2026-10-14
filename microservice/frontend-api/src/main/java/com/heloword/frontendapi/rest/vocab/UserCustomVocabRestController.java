@@ -18,6 +18,9 @@ import com.heloword.common.base.dto.HeloResponse;
 import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import com.heloword.common.model.dto.UserCustomGroupDto;
 import com.heloword.common.model.dto.UserCustomWordDto;
+import com.heloword.common.exception.HeloServiceException;
+import com.heloword.common.type.ResponseCode;
+import com.heloword.frontendapi.service.ai.AiGuard;
 import com.heloword.frontendapi.service.vocab.PhotoParseService;
 import com.heloword.frontendapi.service.vocab.UserCustomVocabFrontendService;
 import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.BASE_FRONTEND_API_URL;
@@ -31,6 +34,10 @@ public class UserCustomVocabRestController extends AbstractBaseFrontendRestContr
 
   private UserCustomVocabFrontendService vocabFrontendService;
   private PhotoParseService photoParseService;
+  private AiGuard aiGuard;
+
+  /** Vision calls are the most expensive LLM work; reject oversized or non-image uploads up front. */
+  private static final long MAX_PHOTO_BYTES = 8L * 1024 * 1024;
 
   // ── Groups ────────────────────────────────────────────────────────────────
 
@@ -75,7 +82,11 @@ public class UserCustomVocabRestController extends AbstractBaseFrontendRestContr
   public HeloResponse<List<UserCustomWordDto>> parsePhoto(
       @RequestParam("image") MultipartFile image,
       @RequestParam(value = "lang", required = false, defaultValue = "EN") String lang) {
-    return HeloResponse.successWithData(photoParseService.parseWordsFromPhoto(image, lang));
+    String type = image.getContentType();
+    if (image.isEmpty() || image.getSize() > MAX_PHOTO_BYTES || type == null || !type.startsWith("image/")) {
+      throw HeloServiceException.of(ResponseCode.INVALID_REQUEST);
+    }
+    return HeloResponse.successWithData(aiGuard.run(() -> photoParseService.parseWordsFromPhoto(image, lang)));
   }
 
   @PostMapping("/groups/{id}/words/batch")

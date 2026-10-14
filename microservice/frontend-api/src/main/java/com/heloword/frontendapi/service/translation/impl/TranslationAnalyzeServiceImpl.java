@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.service.translation.impl;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.TranslationAnalyzeRequest;
@@ -21,7 +23,11 @@ public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService 
   @Autowired
   private LLMProperties llmProperties;
 
-  private final RestTemplate restTemplate = new RestTemplate();
+  /** Bounded so a hung LLM can't pin request threads (and guest AI slots) forever. */
+  private final RestTemplate restTemplate = new RestTemplateBuilder()
+      .setConnectTimeout(Duration.ofSeconds(5))
+      .setReadTimeout(Duration.ofSeconds(60))
+      .build();
 
   @Override
   public String analyze(TranslationAnalyzeRequest request) {
