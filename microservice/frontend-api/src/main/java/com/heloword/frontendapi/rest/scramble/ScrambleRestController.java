@@ -12,6 +12,9 @@ import com.heloword.common.base.rest.AbstractBaseFrontendRestController;
 import static com.heloword.common.base.rest.AbstractBaseFrontendRestController.BASE_FRONTEND_API_URL;
 import com.heloword.frontendapi.model.request.ScrambleAiRequest;
 import com.heloword.frontendapi.service.scramble.ScrambleFrontendService;
+import com.heloword.frontendapi.service.ai.AiGuard;
+import com.heloword.frontendapi.service.ai.AiInputs;
+import static com.heloword.frontendapi.service.ai.AiInputs.SENTENCE_MAX;
 
 @Log4j2
 @RestController
@@ -20,16 +23,19 @@ import com.heloword.frontendapi.service.scramble.ScrambleFrontendService;
 public class ScrambleRestController extends AbstractBaseFrontendRestController {
 
   private ScrambleFrontendService scrambleFrontendService;
+  private AiGuard aiGuard;
 
   /**
    * AI grammar explanation for a sentence scramble item.
-   * Restricted to MEMBER role to prevent LLM endpoint abuse by anonymous users.
-   * The frontend shows the button to guests with a login prompt.
+   * Open to guests; abuse is bounded by the shared daily AI quota in {@link AiGuard}.
    */
-  @PreAuthorize("hasAnyAuthority('MEMBER')")
+  @PreAuthorize("hasAnyAuthority(T(com.heloword.common.type.MemberRole).MEMBER.getName(), T(com.heloword.common.type.MemberRole).UNREGISTERED_MEMBER.getName())")
   @PostMapping("/ai-explain")
   public HeloResponse<?> aiExplain(@RequestBody ScrambleAiRequest request) {
-    String explanation = scrambleFrontendService.aiExplain(request);
+    request.setLang(AiInputs.wordLang(request.getLang()));
+    request.setSentence(AiInputs.required(request.getSentence(), SENTENCE_MAX));
+    request.setTranslation(AiInputs.optional(request.getTranslation(), SENTENCE_MAX));
+    String explanation = aiGuard.run(() -> scrambleFrontendService.aiExplain(request));
     return HeloResponse.successWithData(explanation);
   }
 }

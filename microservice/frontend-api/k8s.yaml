@@ -27,6 +27,12 @@ spec:
               secretKeyRef:
                 name: heloword-secret
                 key: HELO_LLM_URL
+          - name: HELO_AI_GUEST_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: heloword-secret
+                key: HELO_AI_GUEST_SECRET
+                optional: true
           - name: HELO_DB_USERNAME
             valueFrom:
               secretKeyRef:

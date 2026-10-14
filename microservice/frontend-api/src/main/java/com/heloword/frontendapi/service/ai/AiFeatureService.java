@@ -1,5 +1,14 @@
 package com.heloword.frontendapi.service.ai;
 
+import java.util.List;
+import com.heloword.frontendapi.model.request.ai.AiWordRequest;
+import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
+import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
+import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
+import com.heloword.frontendapi.model.response.CheckSentenceResponse;
+import com.heloword.frontendapi.model.response.ClozeResponse;
+import com.heloword.frontendapi.model.response.CollocationDto;
+import com.heloword.frontendapi.model.response.PolitenessResponse;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
 import com.heloword.frontendapi.model.request.ai.WordInsightRequest;
@@ -19,4 +28,13 @@ public interface AiFeatureService {
   WordFillResponse wordFill(WordFillRequest request);
   QuickTranslateResponse quickTranslate(QuickTranslateRequest request);
   VerbConjugationResponse verbConjugation(VerbConjugationRequest request);
+  CheckSentenceResponse checkSentence(CheckSentenceRequest request);
+  String memoryHook(AiWordRequest request);
+  String explainWrong(ExplainWrongRequest request);
+  ClozeResponse cloze(AiWordRequest request);
+  PolitenessResponse politeness(PolitenessRequest request);
+  List<CollocationDto> collocations(AiWordRequest request);
+  String wordLevel(AiWordRequest request);
+  /** @return {story, traditionalChineseTranslation} */
+  String[] weeklyStory(List<String> words, String wordLang);
 }

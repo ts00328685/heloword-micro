@@ -109,6 +109,7 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
         .translateCh(dto.getTranslateCh())
         .sentence(dto.getSentence())
         .phonetics(dto.getPhonetics())
+        .level(dto.getLevel())
         .sourceWordId(dto.getSourceWordId())
         .sourceTableName(dto.getSourceTableName())
         // tableName is the stable reference used by RecordQuiz (answerId + answerTableName)
@@ -140,6 +141,7 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
             .translateCh(dto.getTranslateCh())
             .sentence(dto.getSentence())
             .phonetics(dto.getPhonetics())
+            .level(dto.getLevel())
             .sourceWordId(dto.getSourceWordId())
             .sourceTableName(dto.getSourceTableName())
             .tableName("USER_CUSTOM_WORD")
@@ -160,6 +162,7 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
     entity.setTranslateCh(dto.getTranslateCh());
     entity.setSentence(dto.getSentence());
     entity.setPhonetics(dto.getPhonetics());
+    if (dto.getLevel() != null) entity.setLevel(dto.getLevel());
     entity.setUpdateDate(new Date());
     entity = wordRepo.save(entity);
     return toWordDto(entity);
@@ -208,6 +211,7 @@ public class UserCustomVocabServiceImpl implements UserCustomVocabService {
     dto.setTranslateCh(e.getTranslateCh());
     dto.setSentence(e.getSentence());
     dto.setPhonetics(e.getPhonetics());
+    dto.setLevel(e.getLevel());
     dto.setSourceWordId(e.getSourceWordId());
     dto.setSourceTableName(e.getSourceTableName());
     return dto;

@@ -27,6 +27,9 @@ public class UserCustomWordEntity extends BaseEntity {
   @Column(length = 2048)
   private String sentence;
   private String phonetics;
+  /** Difficulty tag: JLPT N5–N1 or CEFR A1–C2, filled by AI */
+  @Column(length = 8)
+  private String level;
   /** ID of the originating system word if copied from the vocabulary list */
   private Long sourceWordId;
   /** Table name of the originating system word (e.g. WORD_ENGLISH) */

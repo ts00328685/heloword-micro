@@ -17,3 +17,15 @@ helo:
   llm:
     url: ${HELO_LLM_URL}
     model: gemma4:26b-a4b-it-q4_K_M
+  ai:
+    quota:
+      guest-daily: 10
+      ip-daily: 15
+      guest-global-daily: 500
+      member-daily: 200
+      guest-concurrency: 2
+      # Must be the same on every pod: openssl rand -base64 32
+      guest-secret: ${HELO_AI_GUEST_SECRET:}
+      # nginx ingress sets X-Real-IP; switch to CF-Connecting-IP if Cloudflare proxies traffic
+      client-ip-header: X-Real-IP
+      cookie-secure: ${HELO_AI_COOKIE_SECURE:true}
