@@ -26,7 +26,7 @@ public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService 
   @Override
   public String analyze(TranslationAnalyzeRequest request) {
     String langLabel = resolveLangLabel(request.getLang());
-    String system = buildSystemPrompt(langLabel);
+    String system = buildSystemPrompt(langLabel, request.getLang());
     String userContent = buildUserContent(request);
 
     Map<String, Object> body = Map.of(
@@ -72,12 +72,12 @@ public class TranslationAnalyzeServiceImpl implements TranslationAnalyzeService 
     return "英文";
   }
 
-  private String buildSystemPrompt(String langLabel) {
+  private String buildSystemPrompt(String langLabel, String lang) {
     return "你是一位台灣" + langLabel + "老師，我是一位正在學習" + langLabel + "的學生，"
         + "請用繁體中文分析我的翻譯練習，"
         + "比較正確答案和我的輸入，指出錯誤之處及原因，並給出更好的修正建議，"
         + "回覆請控制在7句以內，簡潔有力。"
-        + PromptRules.FURIGANA_ZH + PromptRules.TRADITIONAL_ZH;
+        + PromptRules.furiganaZh(lang) + PromptRules.TRADITIONAL_ZH;
   }
 
   private String buildUserContent(TranslationAnalyzeRequest request) {
