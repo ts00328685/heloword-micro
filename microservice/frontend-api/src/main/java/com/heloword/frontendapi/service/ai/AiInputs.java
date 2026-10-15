@@ -60,6 +60,19 @@ public final class AiInputs {
   private static final Pattern HANGUL = Pattern.compile("\\p{IsHangul}");
   private static final Pattern HAN = Pattern.compile("\\p{IsHan}");
 
+  /**
+   * English or Japanese text only: needs Latin letters or kana. Chinese (kanji with no kana)
+   * is rejected here — given Chinese, the model invents nonsense like 咖啡[かふぃー].
+   * Returns "jp" or "en".
+   */
+  public static String englishOrJapanese(String value) {
+    if (KANA.matcher(value).find()) return "jp";
+    if (LATIN.matcher(value).find()) return "en";
+    throw HeloServiceException.of(ResponseCode.INVALID_REQUEST);
+  }
+
+  private static final Pattern LATIN = Pattern.compile("[A-Za-z]");
+
   /** Rejects text with no kana/kanji before it ever reaches the model. */
   public static String japanese(String value, int max) {
     String v = required(value, max);
