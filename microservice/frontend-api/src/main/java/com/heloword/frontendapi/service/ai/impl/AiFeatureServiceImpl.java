@@ -1,6 +1,7 @@
 package com.heloword.frontendapi.service.ai.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.time.Duration;
 import java.util.List;
@@ -21,6 +22,7 @@ import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.ai.AiWordRequest;
 import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
+import com.heloword.frontendapi.model.request.ai.LookupRequest;
 import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
 import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
@@ -32,6 +34,7 @@ import com.heloword.frontendapi.model.request.ai.VerbConjugationRequest;
 import com.heloword.frontendapi.model.response.CheckSentenceResponse;
 import com.heloword.frontendapi.model.response.ClozeResponse;
 import com.heloword.frontendapi.model.response.CollocationDto;
+import com.heloword.frontendapi.model.response.LookupResponse;
 import com.heloword.frontendapi.model.response.PolitenessResponse;
 import com.heloword.frontendapi.model.response.QuickTranslateResponse;
 import com.heloword.frontendapi.model.response.WordFillResponse;
@@ -432,6 +435,35 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     String story = f.getOrDefault("STORY", "");
     if (story.isEmpty()) throw new RuntimeException("weekly story output missing STORY");
     return new String[] { story, f.getOrDefault("ZH", "") };
+  }
+
+  /**
+   * Cache key for {@link #lookup}. The controller checks the cache with the same key before
+   * charging quota, so both sides must build it from this one method.
+   */
+  public static List<Object> lookupKey(LookupRequest request) {
+    return Arrays.asList("lookup", request.getWordLang(), request.getWord(), request.getSentence());
+  }
+
+  @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "T(com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl).lookupKey(#request)")
+  public LookupResponse lookup(LookupRequest request) {
+    String system = "Explain one word as it is used in the given sentence. Output exactly 3 lines, no extra text:\n"
+        + "WORD: <the word's dictionary form>\n"
+        + "ZH: <繁體中文意思（依句中用法），最多10字>\n"
+        + "EN: <English meaning as used in the sentence, max 6 words>\n"
+        + (PromptRules.isJapanese(request.getWordLang()) ? PromptRules.FURIGANA_EN + " " : "")
+        + PromptRules.TRADITIONAL_EN;
+    String user = "Word: " + request.getWord() + "\nSentence: " + request.getSentence();
+
+    Map<String, String> f = parseFields(callLlm(system, user, 60));
+    String zh = f.getOrDefault("ZH", "");
+    String en = f.getOrDefault("EN", "");
+    // Throwing keeps an unusable answer out of the shared cache.
+    if (zh.isEmpty() && en.isEmpty()) throw new RuntimeException("lookup output missing meanings");
+    String word = f.getOrDefault("WORD", "");
+    return new LookupResponse(word.isEmpty() ? request.getWord() : word, zh, en);
   }
 
   /** Accepts only N1–N5 / A1–C2; anything else becomes "" so junk never reaches the DB. */

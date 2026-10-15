@@ -16,6 +16,7 @@ import static com.heloword.frontendapi.service.ai.AiInputs.WORD_MAX;
 import com.heloword.frontendapi.model.request.ai.AiWordRequest;
 import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
+import com.heloword.frontendapi.model.request.ai.LookupRequest;
 import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
 import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
@@ -28,6 +29,11 @@ import com.heloword.frontendapi.service.ai.AiFeatureService;
 import com.heloword.frontendapi.service.ai.AiGuard;
 import com.heloword.frontendapi.service.ai.AiInputs;
 import com.heloword.frontendapi.service.ai.WeeklyStoryService;
+import com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl;
+import com.heloword.frontendapi.config.CacheConfig;
+import com.heloword.frontendapi.model.response.LookupResponse;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 /**
  * AI features. Every LLM call goes through {@link AiGuard}: guests share a small daily quota
@@ -47,6 +53,7 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
   private AiFeatureService aiFeatureService;
   private WeeklyStoryService weeklyStoryService;
   private AiGuard aiGuard;
+  private CacheManager cacheManager;
 
   /** Remaining AI calls today for the caller. Never consumes quota. */
   @PreAuthorize(ANYONE)
@@ -172,6 +179,23 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
   public HeloResponse<?> collocations(@RequestBody AiWordRequest request) {
     normalize(request);
     return HeloResponse.successWithData(aiGuard.run(() -> aiFeatureService.collocations(request)));
+  }
+
+  /**
+   * Meaning of a word tapped while reading, as used in its sentence. Readers of the same article
+   * tap the same words, so an answer already in the shared cache is returned without charging quota.
+   */
+  @PreAuthorize(ANYONE)
+  @PostMapping("/lookup")
+  public HeloResponse<?> lookup(@RequestBody LookupRequest request) {
+    request.setWord(AiInputs.required(request.getWord(), WORD_MAX));
+    request.setWordLang(AiInputs.wordLang(request.getWordLang(), request.getWord()));
+    request.setSentence(AiInputs.required(request.getSentence(), SENTENCE_MAX));
+
+    Cache cache = cacheManager.getCache(CacheConfig.AI_CACHE);
+    LookupResponse cached = cache == null ? null : cache.get(AiFeatureServiceImpl.lookupKey(request), LookupResponse.class);
+    if (cached != null) return HeloResponse.successWithData(cached);
+    return HeloResponse.successWithData(aiGuard.run(() -> aiFeatureService.lookup(request)));
   }
 
   /** JLPT / CEFR level tag for a saved custom word. */

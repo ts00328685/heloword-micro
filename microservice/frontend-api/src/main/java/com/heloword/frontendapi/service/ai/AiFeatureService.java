@@ -4,10 +4,12 @@ import java.util.List;
 import com.heloword.frontendapi.model.request.ai.AiWordRequest;
 import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
+import com.heloword.frontendapi.model.request.ai.LookupRequest;
 import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
 import com.heloword.frontendapi.model.response.CheckSentenceResponse;
 import com.heloword.frontendapi.model.response.ClozeResponse;
 import com.heloword.frontendapi.model.response.CollocationDto;
+import com.heloword.frontendapi.model.response.LookupResponse;
 import com.heloword.frontendapi.model.response.PolitenessResponse;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.StudyCoachRequest;
@@ -35,6 +37,7 @@ public interface AiFeatureService {
   PolitenessResponse politeness(PolitenessRequest request);
   List<CollocationDto> collocations(AiWordRequest request);
   String wordLevel(AiWordRequest request);
+  LookupResponse lookup(LookupRequest request);
   /** @return {story, traditionalChineseTranslation} */
   String[] weeklyStory(List<String> words, String wordLang);
 }
