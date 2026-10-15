@@ -17,6 +17,7 @@ import com.heloword.frontendapi.model.request.ai.AiWordRequest;
 import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
 import com.heloword.frontendapi.model.request.ai.LookupRequest;
+import com.heloword.frontendapi.model.request.ai.NaturalRequest;
 import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
 import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
@@ -32,6 +33,9 @@ import com.heloword.frontendapi.service.ai.WeeklyStoryService;
 import com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl;
 import com.heloword.frontendapi.config.CacheConfig;
 import com.heloword.frontendapi.model.response.LookupResponse;
+import com.heloword.frontendapi.model.response.NaturalResponse;
+import java.util.List;
+import java.util.function.Supplier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
@@ -192,10 +196,31 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
     request.setWordLang(AiInputs.wordLang(request.getWordLang(), request.getWord()));
     request.setSentence(AiInputs.required(request.getSentence(), SENTENCE_MAX));
 
+    return HeloResponse.successWithData(
+        cachedOrCharged(AiFeatureServiceImpl.lookupKey(request), LookupResponse.class, () -> aiFeatureService.lookup(request)));
+  }
+
+  /**
+   * How natives actually say a textbook phrase. Common phrases repeat across users, so a
+   * cached answer is free. Non-English/Japanese input is rejected before the model.
+   */
+  @PreAuthorize(ANYONE)
+  @PostMapping("/natural")
+  public HeloResponse<?> natural(@RequestBody NaturalRequest request) {
+    request.setPhrase(AiInputs.required(request.getPhrase(), SENTENCE_MAX));
+    request.setLang(AiInputs.englishOrJapanese(request.getPhrase()));
+    return HeloResponse.successWithData(
+        cachedOrCharged(AiFeatureServiceImpl.naturalKey(request), NaturalResponse.class, () -> aiFeatureService.natural(request)));
+  }
+
+  /**
+   * Returns the shared-cache answer for {@code key} without charging quota, else charges quota
+   * and runs {@code call}. {@code key} must be the same key the service's @Cacheable uses.
+   */
+  private <T> T cachedOrCharged(List<Object> key, Class<T> type, Supplier<T> call) {
     Cache cache = cacheManager.getCache(CacheConfig.AI_CACHE);
-    LookupResponse cached = cache == null ? null : cache.get(AiFeatureServiceImpl.lookupKey(request), LookupResponse.class);
-    if (cached != null) return HeloResponse.successWithData(cached);
-    return HeloResponse.successWithData(aiGuard.run(() -> aiFeatureService.lookup(request)));
+    T cached = cache == null ? null : cache.get(key, type);
+    return cached != null ? cached : aiGuard.run(call);
   }
 
   /** JLPT / CEFR level tag for a saved custom word. */

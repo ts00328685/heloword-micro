@@ -23,6 +23,7 @@ import com.heloword.frontendapi.model.request.ai.AiWordRequest;
 import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
 import com.heloword.frontendapi.model.request.ai.LookupRequest;
+import com.heloword.frontendapi.model.request.ai.NaturalRequest;
 import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
 import com.heloword.frontendapi.model.request.ai.QuickTranslateRequest;
 import com.heloword.frontendapi.model.request.ai.SampleSentenceRequest;
@@ -35,6 +36,7 @@ import com.heloword.frontendapi.model.response.CheckSentenceResponse;
 import com.heloword.frontendapi.model.response.ClozeResponse;
 import com.heloword.frontendapi.model.response.CollocationDto;
 import com.heloword.frontendapi.model.response.LookupResponse;
+import com.heloword.frontendapi.model.response.NaturalResponse;
 import com.heloword.frontendapi.model.response.PolitenessResponse;
 import com.heloword.frontendapi.model.response.QuickTranslateResponse;
 import com.heloword.frontendapi.model.response.WordFillResponse;
@@ -464,6 +466,33 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     if (zh.isEmpty() && en.isEmpty()) throw new RuntimeException("lookup output missing meanings");
     String word = f.getOrDefault("WORD", "");
     return new LookupResponse(word.isEmpty() ? request.getWord() : word, zh, en);
+  }
+
+  /** Cache key for {@link #natural}; the controller checks the cache with it before charging quota. */
+  public static List<Object> naturalKey(NaturalRequest request) {
+    return Arrays.asList("natural", request.getLang(), request.getPhrase());
+  }
+
+  /** Prompt tuned against gemma4:26b-a4b — see the "natural vs textbook" commit for the samples. */
+  @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "T(com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl).naturalKey(#request)")
+  public NaturalResponse natural(NaturalRequest request) {
+    String system = "You coach learners on how native speakers really talk. The user gives an English or Japanese phrase "
+        + "that may sound like a textbook. Output exactly 3 lines, no extra text:\n"
+        + "NATURAL: <what a native would actually say in everyday situations, in the same language as the input; "
+        + "if the input already sounds natural, repeat it unchanged>\n"
+        + "CASUAL: <what friends would say to each other, in the same language as the input>\n"
+        + "NOTE: <一句繁體中文，說明原句、自然說法、口語分別適合什麼場合；用「原句」「自然說法」「口語」稱呼，不要寫英文標籤>\n"
+        + "In NATURAL and CASUAL, give each Japanese kanji word one reading right after it, e.g. 一度[いちど]、飲[の]みたい、駅[えき].\n"
+        + PromptRules.FURIGANA_EN + " " + PromptRules.TRADITIONAL_EN;
+
+    Map<String, String> f = parseFields(callLlm(system, request.getPhrase(), 150));
+    String natural = f.getOrDefault("NATURAL", "");
+    String casual = f.getOrDefault("CASUAL", "");
+    // Throwing keeps an incomplete answer out of the shared cache.
+    if (natural.isEmpty() || casual.isEmpty()) throw new RuntimeException("natural output missing lines");
+    return new NaturalResponse(request.getLang(), natural, casual, f.getOrDefault("NOTE", ""));
   }
 
   /** Accepts only N1–N5 / A1–C2; anything else becomes "" so junk never reaches the DB. */

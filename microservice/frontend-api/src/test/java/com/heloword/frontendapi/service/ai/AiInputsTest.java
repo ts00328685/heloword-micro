@@ -22,4 +22,18 @@ class AiInputsTest {
     assertEquals("en", AiInputs.wordLang("custom", "apple"));
     assertEquals("en", AiInputs.wordLang(null, "apple"));
   }
+
+  @Test
+  void naturalAcceptsEnglishOrJapaneseOnly() {
+    assertEquals("en", AiInputs.englishOrJapanese("How are you?"));
+    assertEquals("jp", AiInputs.englishOrJapanese("お元気ですか"));
+    assertEquals("jp", AiInputs.englishOrJapanese("コーヒー"));
+    // mixed: any kana means Japanese
+    assertEquals("jp", AiInputs.englishOrJapanese("OKです"));
+    // Chinese (kanji, no kana) never reaches the model
+    org.junit.jupiter.api.Assertions.assertThrows(com.heloword.common.exception.HeloServiceException.class,
+        () -> AiInputs.englishOrJapanese("我想喝咖啡"));
+    org.junit.jupiter.api.Assertions.assertThrows(com.heloword.common.exception.HeloServiceException.class,
+        () -> AiInputs.englishOrJapanese("12345"));
+  }
 }

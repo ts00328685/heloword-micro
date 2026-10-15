@@ -12,7 +12,9 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import com.heloword.frontendapi.model.request.ai.LookupRequest;
+import com.heloword.frontendapi.model.request.ai.NaturalRequest;
 import com.heloword.frontendapi.model.response.LookupResponse;
+import com.heloword.frontendapi.model.response.NaturalResponse;
 import com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl;
 
 /**
@@ -59,5 +61,27 @@ class LookupCacheKeyTest {
     assertNotEquals(
         AiFeatureServiceImpl.lookupKey(request("bank", "en", "a")),
         AiFeatureServiceImpl.lookupKey(request("bank", "ja", "a")));
+  }
+
+  @Test
+  void naturalAnswerStoredByCacheableIsFoundWithTheControllerKey() throws Exception {
+    NaturalRequest r = new NaturalRequest();
+    r.setPhrase("How are you?");
+    r.setLang("en");
+    Method m = AiFeatureServiceImpl.class.getMethod("natural", NaturalRequest.class);
+    StandardEvaluationContext ctx = new StandardEvaluationContext();
+    ctx.setVariable("request", r);
+    Object storedUnder = new SpelExpressionParser().parseExpression(m.getAnnotation(Cacheable.class).key()).getValue(ctx);
+
+    Cache cache = new ConcurrentMapCache("aiFeature");
+    NaturalResponse answer = new NaturalResponse("en", "How's it going?", "What's up?", "note");
+    cache.put(storedUnder, answer);
+
+    NaturalRequest same = new NaturalRequest();
+    same.setPhrase("How are you?");
+    same.setLang("en");
+    assertEquals(answer, cache.get(AiFeatureServiceImpl.naturalKey(same), NaturalResponse.class));
+    // a lookup key for the same text must never collide with it
+    assertNotEquals(AiFeatureServiceImpl.naturalKey(same), AiFeatureServiceImpl.lookupKey(request("How are you?", "en", "How are you?")));
   }
 }
