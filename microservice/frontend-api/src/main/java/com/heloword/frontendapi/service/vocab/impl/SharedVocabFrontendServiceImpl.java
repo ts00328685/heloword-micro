@@ -1,12 +1,12 @@
 package com.heloword.frontendapi.service.vocab.impl;
 
+import com.heloword.common.util.PublicNames;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import com.heloword.common.feignclient.ServiceRecordClient;
 import com.heloword.common.model.dto.SharedVocabGroupDto;
@@ -73,9 +73,8 @@ public class SharedVocabFrontendServiceImpl implements SharedVocabFrontendServic
   }
 
   private String resolveDisplayName(UserDto user) {
-    if (StringUtils.isNotBlank(user.getNickname())) return user.getNickname();
-    if (StringUtils.isNotBlank(user.getFullname())) return user.getFullname();
-    return user.getUuid();
+    // Public name only — never the Google full name.
+    return PublicNames.of(user.getNickname(), user.getUuid());
   }
 
   private static String encodeHeader(String value) {

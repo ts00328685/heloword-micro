@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.service.social.impl;
 
+import com.heloword.common.util.PublicNames;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -118,11 +119,10 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
       }
       String otherUserId = (otherMember != null && otherMember.getUuid() != null)
           ? otherMember.getUuid() : otherUsername;
-      String otherProfileName = otherMember != null && otherMember.getNickname() != null
-          ? otherMember.getNickname()
-          : otherMember != null && otherMember.getFullname() != null
-              ? otherMember.getFullname()
-              : null;
+      // Public name only — never the Google full name.
+      String otherProfileName = otherMember != null
+          ? PublicNames.of(otherMember.getNickname(), otherMember.getUuid())
+          : null;
 
       String status;
       if ("ACCEPTED".equals(f.getFriendStatus())) {
@@ -211,9 +211,8 @@ public class SocialFrontendServiceImpl implements SocialFrontendService {
   public void acceptFriendRequest(UserDto user, Long id) {
     // Addressee's own display name — stored as requesterNickname so the requester
     // immediately sees a real name for the friend who just accepted them.
-    String addresseeDisplayName = user.getNickname() != null ? user.getNickname()
-        : user.getFullname() != null ? user.getFullname()
-        : user.getUsername();
+    // Never the Google full name or the email (username).
+    String addresseeDisplayName = PublicNames.of(user.getNickname(), user.getUuid());
 
     var result = serviceRecordClient.acceptFriendRequest(user.getUsername(), id, encodeHeader(addresseeDisplayName));
     var accepted = result.getData();
