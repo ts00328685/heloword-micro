@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.rest.social;
 
+import com.heloword.common.util.PublicNames;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -32,7 +33,7 @@ public class SocialRestController extends AbstractBaseFrontendRestController {
       // Use UUID if available; fall back to username until SQL migration is complete
       String userId = user.getUuid() != null ? user.getUuid() : user.getUsername();
       request.setUserId(userId);
-      request.setDisplayName(user.getNickname() != null ? user.getNickname() : user.getUsername());
+      request.setDisplayName(PublicNames.of(user.getNickname(), userId)); // never the email
       request.setIsGuest(false);
     }
     // Guest: allow request-supplied values as-is (no server-side identity to verify)
@@ -66,7 +67,7 @@ public class SocialRestController extends AbstractBaseFrontendRestController {
     UserDto user = getUser().get();
     String userId = user.getUuid() != null ? user.getUuid() : user.getUsername();
     dto.setSenderUserId(userId);
-    dto.setSenderDisplayName(user.getNickname() != null ? user.getNickname() : user.getUsername());
+    dto.setSenderDisplayName(PublicNames.of(user.getNickname(), userId)); // never the email
     return HeloResponse.successWithData(socialFrontendService.sendMessage(dto));
   }
 

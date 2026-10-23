@@ -1,5 +1,6 @@
 package com.heloword.frontendapi.rest.challenge;
 
+import com.heloword.common.util.PublicNames;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -35,7 +36,7 @@ public class ChallengeRestController extends AbstractBaseFrontendRestController 
   @PostMapping("/rooms")
   public HeloResponse<ChallengeRoomDto> createRoom(@RequestBody CreateRoomRequest req) {
     UserDto user = getUser().get();
-    String displayName = user.getNickname() != null ? user.getNickname() : user.getUuid();
+    String displayName = PublicNames.of(user.getNickname(), user.getUuid());
     return HeloResponse.successWithData(
         challengeService.createRoom(user.getUuid(), user.getUuid(), displayName, req));
   }
@@ -47,7 +48,7 @@ public class ChallengeRestController extends AbstractBaseFrontendRestController 
     if (currentUser.isPresent()) {
       UserDto user = currentUser.get();
       req.setUserId(user.getUuid());
-      req.setDisplayName(user.getNickname() != null ? user.getNickname() : user.getUuid());
+      req.setDisplayName(PublicNames.of(user.getNickname(), user.getUuid()));
       req.setGuest(false);
     }
     return HeloResponse.successWithData(challengeService.joinRoom(roomId, req));

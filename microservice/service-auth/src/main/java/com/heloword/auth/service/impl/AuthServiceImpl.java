@@ -1,5 +1,6 @@
 package com.heloword.auth.service.impl;
 
+import com.heloword.common.util.PublicNames;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -70,7 +71,8 @@ public class AuthServiceImpl implements AuthService {
   private static Optional<MemberEntity> memberMapper(String idTokenKey, GoogleIdToken.Payload idToken, MemberEntity entity, Set<RoleEntity> roleEntitys) {
     if (entity != null) {
       entity.setFullname(getClaimString(idToken, "name"));
-      entity.setNickname(Optional.ofNullable(entity.getNickname()).orElse(getClaimString(idToken, "given_name")));
+      // Never fill the public nickname from the Google profile — only a name the user chose, or a neutral one.
+      entity.setNickname(Optional.ofNullable(entity.getNickname()).filter(n -> !n.isBlank()).orElseGet(PublicNames::generate));
       entity.setPicture(getClaimString(idToken, "picture"));
       entity.setGoogleToken(idToken.getUserId());
       return Optional.of(entity);
@@ -79,7 +81,8 @@ public class AuthServiceImpl implements AuthService {
           .email(idToken.getEmail())
           .username(idToken.getEmail())
           .fullname(getClaimString(idToken, "name"))
-          .nickname(getClaimString(idToken, "given_name"))
+          // Neutral generated nickname; users pick their own in the app. Not taken from Google.
+          .nickname(PublicNames.generate())
           .locale(getClaimString(idToken, "locale"))
           .picture(getClaimString(idToken, "picture"))
           .status(1)
