@@ -16,6 +16,7 @@ import static com.heloword.frontendapi.service.ai.AiInputs.WORD_MAX;
 import com.heloword.frontendapi.model.request.ai.AiWordRequest;
 import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
+import com.heloword.frontendapi.model.request.ai.ExplainSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.LookupRequest;
 import com.heloword.frontendapi.model.request.ai.NaturalRequest;
 import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
@@ -32,6 +33,7 @@ import com.heloword.frontendapi.service.ai.AiInputs;
 import com.heloword.frontendapi.service.ai.WeeklyStoryService;
 import com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl;
 import com.heloword.frontendapi.config.CacheConfig;
+import com.heloword.frontendapi.model.response.ExplainSentenceResponse;
 import com.heloword.frontendapi.model.response.LookupResponse;
 import com.heloword.frontendapi.model.response.NaturalResponse;
 import java.util.List;
@@ -198,6 +200,19 @@ public class AiFeatureRestController extends AbstractBaseFrontendRestController 
 
     return HeloResponse.successWithData(
         cachedOrCharged(AiFeatureServiceImpl.lookupKey(request), LookupResponse.class, () -> aiFeatureService.lookup(request)));
+  }
+
+  /**
+   * A sentence from an article broken into chunks, grammar points and a translation. Readers of the
+   * same article ask about the same sentences, so a cached answer is returned without charging quota.
+   */
+  @PreAuthorize(ANYONE)
+  @PostMapping("/explain-sentence")
+  public HeloResponse<?> explainSentence(@RequestBody ExplainSentenceRequest request) {
+    request.setSentence(AiInputs.required(request.getSentence(), SENTENCE_MAX));
+    request.setWordLang(AiInputs.englishOrJapanese(request.getSentence()));
+    return HeloResponse.successWithData(cachedOrCharged(AiFeatureServiceImpl.explainSentenceKey(request),
+        ExplainSentenceResponse.class, () -> aiFeatureService.explainSentence(request)));
   }
 
   /**

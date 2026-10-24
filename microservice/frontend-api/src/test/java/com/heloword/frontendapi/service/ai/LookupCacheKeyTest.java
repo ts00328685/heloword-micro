@@ -5,14 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import com.heloword.frontendapi.model.request.ai.ExplainSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.LookupRequest;
 import com.heloword.frontendapi.model.request.ai.NaturalRequest;
+import com.heloword.frontendapi.model.response.ExplainSentenceResponse;
 import com.heloword.frontendapi.model.response.LookupResponse;
 import com.heloword.frontendapi.model.response.NaturalResponse;
 import com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl;
@@ -83,5 +86,28 @@ class LookupCacheKeyTest {
     assertEquals(answer, cache.get(AiFeatureServiceImpl.naturalKey(same), NaturalResponse.class));
     // a lookup key for the same text must never collide with it
     assertNotEquals(AiFeatureServiceImpl.naturalKey(same), AiFeatureServiceImpl.lookupKey(request("How are you?", "en", "How are you?")));
+  }
+
+  @Test
+  void explainSentenceAnswerStoredByCacheableIsFoundWithTheControllerKey() throws Exception {
+    ExplainSentenceRequest r = new ExplainSentenceRequest();
+    r.setSentence("紅葉は例年より遅く見頃を迎えました。");
+    r.setWordLang("jp");
+    Method m = AiFeatureServiceImpl.class.getMethod("explainSentence", ExplainSentenceRequest.class);
+    StandardEvaluationContext ctx = new StandardEvaluationContext();
+    ctx.setVariable("request", r);
+    Object storedUnder = new SpelExpressionParser().parseExpression(m.getAnnotation(Cacheable.class).key()).getValue(ctx);
+
+    Cache cache = new ConcurrentMapCache("aiFeature");
+    ExplainSentenceResponse answer = new ExplainSentenceResponse(
+        List.of(new ExplainSentenceResponse.Part("紅葉[こうよう]は", "主題：紅葉")), List.of(), "紅葉比往年晚進入最佳觀賞期。");
+    cache.put(storedUnder, answer);
+
+    ExplainSentenceRequest same = new ExplainSentenceRequest();
+    same.setSentence("紅葉は例年より遅く見頃を迎えました。");
+    same.setWordLang("jp");
+    assertEquals(answer, cache.get(AiFeatureServiceImpl.explainSentenceKey(same), ExplainSentenceResponse.class));
+    assertNotEquals(AiFeatureServiceImpl.explainSentenceKey(same),
+        AiFeatureServiceImpl.lookupKey(request("紅葉", "jp", "紅葉は例年より遅く見頃を迎えました。")));
   }
 }
