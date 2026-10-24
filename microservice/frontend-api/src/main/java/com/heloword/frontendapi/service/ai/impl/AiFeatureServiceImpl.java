@@ -22,6 +22,7 @@ import com.heloword.frontendapi.config.LLMProperties;
 import com.heloword.frontendapi.model.request.ai.AiWordRequest;
 import com.heloword.frontendapi.model.request.ai.CheckSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.ExplainWrongRequest;
+import com.heloword.frontendapi.model.request.ai.ExplainSentenceRequest;
 import com.heloword.frontendapi.model.request.ai.LookupRequest;
 import com.heloword.frontendapi.model.request.ai.NaturalRequest;
 import com.heloword.frontendapi.model.request.ai.PolitenessRequest;
@@ -35,6 +36,7 @@ import com.heloword.frontendapi.model.request.ai.VerbConjugationRequest;
 import com.heloword.frontendapi.model.response.CheckSentenceResponse;
 import com.heloword.frontendapi.model.response.ClozeResponse;
 import com.heloword.frontendapi.model.response.CollocationDto;
+import com.heloword.frontendapi.model.response.ExplainSentenceResponse;
 import com.heloword.frontendapi.model.response.LookupResponse;
 import com.heloword.frontendapi.model.response.NaturalResponse;
 import com.heloword.frontendapi.model.response.PolitenessResponse;
@@ -466,6 +468,50 @@ public class AiFeatureServiceImpl implements AiFeatureService {
     if (zh.isEmpty() && en.isEmpty()) throw new RuntimeException("lookup output missing meanings");
     String word = f.getOrDefault("WORD", "");
     return new LookupResponse(word.isEmpty() ? request.getWord() : word, zh, en);
+  }
+
+  /** Cache key for {@link #explainSentence}; the controller checks the cache with it before charging quota. */
+  public static List<Object> explainSentenceKey(ExplainSentenceRequest request) {
+    return Arrays.asList("explain-sentence", request.getWordLang(), request.getSentence());
+  }
+
+  @Override
+  @Cacheable(value = CacheConfig.AI_CACHE,
+      key = "T(com.heloword.frontendapi.service.ai.impl.AiFeatureServiceImpl).explainSentenceKey(#request)")
+  public ExplainSentenceResponse explainSentence(ExplainSentenceRequest request) {
+    boolean jp = PromptRules.isJapanese(request.getWordLang());
+    String system = "你幫學生拆解一個" + (jp ? "日文" : "英文") + "句子。只輸出以下格式，每項一行，不要其他文字：\n"
+        + "CHUNK: <原句中依序的一段意群，照抄原文> | <這段的作用與意思，繁體中文，最多20字>\n"
+        + "（CHUNK 依原句順序列 2–6 行，合起來要涵蓋整句）\n"
+        + "POINT: <值得注意的文法或句型，如〜より、be used to> | <繁體中文說明，最多25字>\n"
+        + "（POINT 0–3 行，只列真正值得學的）\n"
+        + "ZH: <整句自然的繁體中文翻譯>\n"
+        + (jp ? PromptRules.FURIGANA_ZH : PromptRules.NO_FURIGANA_ZH) + PromptRules.TRADITIONAL_ZH;
+
+    String raw = callLlm(system, request.getSentence(), 400);
+    List<ExplainSentenceResponse.Part> chunks = new ArrayList<>();
+    List<ExplainSentenceResponse.Part> points = new ArrayList<>();
+    String zh = "";
+    for (String line : raw.replace('：', ':').split("\n")) {
+      int colon = line.indexOf(':');
+      if (colon <= 0) continue;
+      String key = line.substring(0, colon).trim().toUpperCase();
+      String value = line.substring(colon + 1).trim();
+      if (key.equals("ZH")) {
+        if (zh.isEmpty()) zh = value;
+        continue;
+      }
+      if (!key.equals("CHUNK") && !key.equals("POINT")) continue;
+      int bar = value.indexOf('|');
+      if (bar <= 0) continue;
+      ExplainSentenceResponse.Part part =
+          new ExplainSentenceResponse.Part(value.substring(0, bar).trim(), value.substring(bar + 1).trim());
+      if (part.getText().isEmpty()) continue;
+      (key.equals("CHUNK") ? chunks : points).add(part);
+    }
+    // Throwing keeps an unusable answer out of the shared cache.
+    if (chunks.isEmpty() || zh.isEmpty()) throw new RuntimeException("explain-sentence output missing chunks");
+    return new ExplainSentenceResponse(chunks, points, zh);
   }
 
   /** Cache key for {@link #natural}; the controller checks the cache with it before charging quota. */
